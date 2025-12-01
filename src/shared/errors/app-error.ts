@@ -1,0 +1,6 @@
+export type AppErrorType =
+	| 'NOT_FOUND_ERROR'
+	| 'VALIDATION_ERROR'
+	| 'DATABASE_ERROR'
+	| 'AUTHORIZATION_ERROR'
+	| 'UNKNOWN_ERROR'

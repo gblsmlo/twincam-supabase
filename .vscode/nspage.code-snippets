@@ -1,0 +1,31 @@
+{
+	"Next.js Dashboard Page": {
+		"prefix": "nspage",
+		"body": [
+			"import { MainContent } from '@components/ui/main-content'",
+			"import { PageDescription, PageHeader, PageTitle } from '@components/ui/page-header'",
+			"import type { Metadata } from 'next'",
+			"",
+			"export const metadata: Metadata = {",
+			"\tdescription: '${2:Page description}',",
+			"\ttitle: '${1:Page Title}',",
+			"}",
+			"",
+			"export default function Page() {",
+			"\tconst title = String(metadata.title)",
+			"\tconst description = String(metadata.description)",
+			"",
+			"\treturn (",
+			"\t\t<MainContent size=\"${3:2xl}\">",
+			"\t\t\t<PageHeader>",
+			"\t\t\t\t<PageTitle>{title}</PageTitle>",
+			"\t\t\t\t<PageDescription>{description}</PageDescription>",
+			"\t\t\t</PageHeader>",
+			"\t\t\t$0",
+			"\t\t</MainContent>",
+			"\t)",
+			"}"
+		],
+		"description": "Create a simple Next.js page with metadata"
+	}
+}

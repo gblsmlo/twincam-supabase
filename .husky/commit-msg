@@ -1,0 +1,7 @@
+#!/bin/sh
+# Use pnpm if available, otherwise fall back to npx
+if command -v pnpm >/dev/null 2>&1; then
+    pnpm exec commitlint --edit "$1"
+else
+  npx --no -- commitlint --edit $1
+fi

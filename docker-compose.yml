@@ -1,0 +1,14 @@
+services:
+  db:
+    image: bitnami/postgresql:latest
+    container_name: twincan_db
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: twincan_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+

@@ -1,0 +1,9 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.3.4/schema.json",
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
+	},
+	"extends": ["@tc96/biome-config"]
+}
