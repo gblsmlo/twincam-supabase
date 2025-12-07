@@ -1,14 +1,14 @@
 'use client'
 
-import { toSlug } from '@/utils/to-slug'
 import {
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
-} from '@components/ui/sidebar'
-import type { Route } from '@shared/config/routes'
+} from '@/components/ui/sidebar'
+import type { Route } from '@/shared/config/routes'
+import { toSlug } from '@/utils/to-slug'
 import Link from 'next/link'
 import type { ComponentProps } from 'react'
 

@@ -1,5 +1,5 @@
+import { dataTableConfig } from '@/shared/config/data-table'
 import type { ExtendedColumnFilter, FilterOperator, FilterVariant } from '@/types/data-table'
-import { dataTableConfig } from '@shared/config/data-table'
 import type { Column } from '@tanstack/react-table'
 
 export function getCommonPinningStyles<TData>({

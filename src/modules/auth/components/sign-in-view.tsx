@@ -1,4 +1,4 @@
-import { Anchor } from '@components/ui/anchor'
+import { Anchor } from '@/components/ui/anchor'
 import { SignInForm } from '../forms'
 
 export function SignInView() {

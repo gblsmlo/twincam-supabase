@@ -1,7 +1,7 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
 import { authClient } from '@/infra/auth/client'
-import { Button } from '@components/ui/button'
 import { useTransition } from 'react'
 
 export function GoogleProviderButton() {

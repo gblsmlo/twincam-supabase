@@ -1,13 +1,13 @@
 'use client'
 
-import { NavDocuments } from '@components/navigations/nav-documents'
+import { NavDocuments } from '@/components/navigations/nav-documents'
 import {
 	Sidebar,
 	SidebarContent,
 	SidebarFooter,
 	SidebarHeader,
 	useSidebar,
-} from '@components/ui/sidebar'
+} from '@/components/ui/sidebar'
 import {
 	crmRoutes,
 	documentsRoutes,
@@ -15,7 +15,7 @@ import {
 	secondaryRoutes,
 	storeRoutes,
 	userRoutes,
-} from '@shared/config/routes'
+} from '@/shared/config/routes'
 import Link from 'next/link'
 import type * as React from 'react'
 import { Logo } from '../logo'

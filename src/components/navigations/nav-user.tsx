@@ -1,8 +1,5 @@
 'use client'
 
-import { signOut, useSession } from '@/infra/auth/client'
-import { type Route, userRoutes } from '@/shared/config/routes'
-import { toSlug } from '@/utils/to-slug'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -11,8 +8,16 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from '@components/ui/dropdown-menu'
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@components/ui/sidebar'
+} from '@/components/ui/dropdown-menu'
+import {
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	useSidebar,
+} from '@/components/ui/sidebar'
+import { signOut, useSession } from '@/infra/auth/client'
+import { type Route, userRoutes } from '@/shared/config/routes'
+import { toSlug } from '@/utils/to-slug'
 import { IconDotsVertical, IconLogout } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 import { type ComponentProps, useEffect, useState } from 'react'

@@ -1,6 +1,5 @@
-import { MainContent } from '@components/ui/main-content'
-import { PageDescription, PageHeader, PageTitle } from '@components/ui/page-header'
-// import { getSessionAction } from '@/modules/auth'
+import { MainContent } from '@/components/ui/main-content'
+import { PageDescription, PageHeader, PageTitle } from '@/components/ui/page-header'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -9,7 +8,6 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
-	// const session = await getSessionAction()
 	const title = String(metadata.title)
 	const description = String(metadata.description)
 

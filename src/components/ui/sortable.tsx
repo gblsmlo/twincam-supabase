@@ -1,7 +1,7 @@
 'use client'
 
-import { useComposedRefs } from '@components/lib/compose-refs'
-import { cn } from '@components/lib/utils'
+import { useComposedRefs } from '@/components/lib/compose-refs'
+import { cn } from '@/components/lib/utils'
 import {
 	type Announcements,
 	closestCenter,

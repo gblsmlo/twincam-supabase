@@ -1,14 +1,21 @@
 'use client'
 
-import { Alert, AlertDescription } from '@components/ui/alert'
-import { Anchor } from '@components/ui/anchor'
-import { Button } from '@components/ui/button'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@components/ui/form'
-import { Input } from '@components/ui/input'
-import { Spinner } from '@components/ui/spiner'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Anchor } from '@/components/ui/anchor'
+import { Button } from '@/components/ui/button'
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spiner'
+import { isFailure, isSuccess } from '@/shared/errors/result'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { isFailure, isSuccess } from '@shared/errors/result'
-import { sleep } from '@utils/sleep'
+import { Loader2 } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { useTransition } from 'react'
 import { useForm } from 'react-hook-form'
@@ -29,8 +36,6 @@ export function SignInForm() {
 		resolver: zodResolver(signInSchema),
 	})
 
-	const isSubmitPending = isPending || form.formState.isSubmitting
-
 	const signUpSubmit = (formData: SignInFormData) => {
 		form.clearErrors()
 
@@ -41,21 +46,17 @@ export function SignInForm() {
 				form.setError('root', {
 					message: result.message,
 				})
-
-				toast.error(result.error || 'Ocorreu um erro', {
-					description: result.message,
-				})
 			}
 
 			if (isSuccess(result)) {
 				toast.success('Login realizado com sucesso!')
 
-				await sleep(2000)
-
 				redirect(result.data.redirectTo)
 			}
 		})
 	}
+
+	const isSubmitting = form.formState.isSubmitting || isPending
 
 	return (
 		<Form {...form}>
@@ -63,7 +64,7 @@ export function SignInForm() {
 				<div className="grid gap-6">
 					{form.formState.errors.root && (
 						<Alert variant="destructive">
-							<AlertDescription>{form.formState.errors.root.message}</AlertDescription>
+							<AlertTitle>{form.formState.errors.root.message}</AlertTitle>
 						</Alert>
 					)}
 					<FormField
@@ -73,7 +74,7 @@ export function SignInForm() {
 							<FormItem>
 								<FormLabel>Email</FormLabel>
 								<FormControl>
-									<Input autoComplete="email" type="email" {...field} disabled={isSubmitPending} />
+									<Input autoComplete="email" type="email" {...field} disabled={isSubmitting} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -97,16 +98,15 @@ export function SignInForm() {
 										autoComplete="new-password"
 										type="password"
 										{...field}
-										disabled={isSubmitPending}
+										disabled={isSubmitting}
 									/>
 								</FormControl>
 								<FormMessage />
 							</FormItem>
 						)}
 					/>
-					<Button disabled={isSubmitPending} type="submit">
-						{isSubmitPending && <Spinner />}
-						Entrar
+					<Button type="submit">
+						{isSubmitting ? <Loader2 className="size-4 animate-spin" /> : 'Entrar'}
 					</Button>
 
 					<ProviderSeparetor />

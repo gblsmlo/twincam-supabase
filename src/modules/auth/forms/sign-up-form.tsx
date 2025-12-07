@@ -1,13 +1,20 @@
 'use client'
 
-import { Alert, AlertDescription } from '@components/ui/alert'
-import { Button } from '@components/ui/button'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@components/ui/form'
-import { Input } from '@components/ui/input'
-import { Spinner } from '@components/ui/spiner'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spiner'
+import { isFailure, isSuccess } from '@/shared/errors/result'
+import { sleep } from '@/utils/sleep'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { isFailure, isSuccess } from '@shared/errors/result'
-import { sleep } from '@utils/sleep'
 import { redirect } from 'next/navigation'
 import { useTransition } from 'react'
 import { useForm } from 'react-hook-form'

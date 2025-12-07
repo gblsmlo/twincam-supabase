@@ -1,4 +1,4 @@
-import { AppBreadcrumb } from '@components/app-partials/app-breadcrumb'
+import { AppBreadcrumb } from '@/components/app-partials/app-breadcrumb'
 import { Separator } from '../ui/separator'
 import { SidebarTrigger } from '../ui/sidebar'
 

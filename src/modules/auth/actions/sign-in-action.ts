@@ -1,47 +1,41 @@
 'use server'
 
-import { authServer } from '@infra/auth/server'
-import { handleAuthError } from '@shared/errors/error-handler'
-import { failure, type Result, success } from '@shared/errors/result'
+import { createClient } from '@/lib/supabase/server'
+import { failure, handleAuthError, type Result, success } from '@/shared/errors'
 import { type SignInFormData, signInSchema } from '../schemas'
 
-type SignInOutput = {
+type Output = {
 	redirectTo: string
 }
 
-export const signInAction = async (formData: SignInFormData): Promise<Result<SignInOutput>> => {
-	const validatedFields = signInSchema.safeParse(formData)
+export const signInAction = async (formData: SignInFormData): Promise<Result<Output>> => {
+	const validated = signInSchema.safeParse(formData)
 
-	if (!validatedFields.success) {
+	if (!validated.success) {
 		return failure({
-			details: validatedFields.error.flatten().fieldErrors,
-			error: 'Dados Inválidos',
-			message: 'Por favor, corrija os campos destacados.',
+			details: validated.error.cause,
+			error: validated.error.name,
+			message: validated.error.message,
 			type: 'VALIDATION_ERROR',
 		})
 	}
 
-	const input: typeof validatedFields.data = {
-		email: validatedFields.data.email,
-		password: validatedFields.data.password,
-	}
-
-	const response = await authServer.api.signInEmail({
-		asResponse: true,
-		body: input,
-	})
-
-	const data = await response.json()
-
-	if (!response.ok) {
-		return failure({
-			error: data.code || 'Erro na autenticação',
-			message: data.message || 'Não foi authenticar o usuário.',
-			type: 'AUTHORIZATION_ERROR',
-		})
-	}
-
 	try {
+		const supabase = await createClient()
+
+		const { error: authError } = await supabase.auth.signInWithPassword({
+			email: validated.data.email,
+			password: validated.data.password,
+		})
+
+		if (authError) {
+			return failure({
+				error: authError.name,
+				message: authError.message || 'Não foi authenticar o usuário.',
+				type: 'AUTHORIZATION_ERROR',
+			})
+		}
+
 		return success({
 			redirectTo: '/dashboard',
 		})

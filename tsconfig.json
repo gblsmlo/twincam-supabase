@@ -19,14 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@components/*": ["./src/components/*"],
-      "@lib/*": ["./src/lib/*"],
-      "@modules/*": ["./src/modules/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@shared/*": ["./src/shared/*"],
-      "@infra/*": ["./src/infra/*"],
-      "@hooks/*": ["./src/hooks/*"],
+      "@/*": ["./src/*"]
     }
   },
   "include": [

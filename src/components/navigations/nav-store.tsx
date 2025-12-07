@@ -1,6 +1,5 @@
 'use client'
 
-import type { Route } from '@/shared/config/routes'
 import {
 	SidebarGroup,
 	SidebarGroupLabel,
@@ -8,7 +7,8 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 	useSidebar,
-} from '@components/ui/sidebar'
+} from '@/components/ui/sidebar'
+import type { Route } from '@/shared/config/routes'
 import Link from 'next/link'
 
 export function NavStore({ items }: { items: Route[] }) {

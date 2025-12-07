@@ -1,7 +1,5 @@
 'use client'
 
-import { allRoutes } from '@/shared/config/routes'
-import { toSlug } from '@/utils/to-slug'
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -9,7 +7,9 @@ import {
 	BreadcrumbList,
 	BreadcrumbPage,
 	BreadcrumbSeparator,
-} from '@components/ui/breadcrumb'
+} from '@/components/ui/breadcrumb'
+import { allRoutes } from '@/shared/config/routes'
+import { toSlug } from '@/utils/to-slug'
 import type { LucideIcon } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useMemo } from 'react'

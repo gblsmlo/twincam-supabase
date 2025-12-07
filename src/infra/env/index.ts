@@ -3,21 +3,20 @@ import { z } from 'zod'
 
 export const env = createEnv({
 	client: {
-		NEXT_PUBLIC_URL: z.url(),
+		NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string(),
+		NEXT_PUBLIC_SUPABASE_URL: z.url(),
 	},
 	runtimeEnv: {
-		BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
-		BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
 		DATABASE_URL: process.env.DATABASE_URL,
 		GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
 		GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-		NEXT_PUBLIC_URL: process.env.NEXT_PUBLIC_URL,
+		NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+		NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
 		NODE_ENV: process.env.NODE_ENV,
 		PORT: process.env.PORT,
+		SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
 	},
 	server: {
-		BETTER_AUTH_SECRET: z.string(),
-		BETTER_AUTH_URL: z.url(),
 		DATABASE_URL: z
 			.string()
 			.refine((url) => url.startsWith('postgresql://') || url.startsWith('postgres://'), {
@@ -27,5 +26,6 @@ export const env = createEnv({
 		GOOGLE_CLIENT_SECRET: z.string(),
 		NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 		PORT: z.coerce.number().min(1).max(65535).default(3333),
+		SUPABASE_SECRET_KEY: z.string(),
 	},
 })

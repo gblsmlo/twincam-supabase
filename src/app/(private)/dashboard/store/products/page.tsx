@@ -1,6 +1,6 @@
+import { MainContent } from '@/components/ui/main-content'
+import { PageDescription, PageHeader, PageTitle } from '@/components/ui/page-header'
 import { DataTableProduct } from '@/modules/product/components/data-table-product'
-import { MainContent } from '@components/ui/main-content'
-import { PageDescription, PageHeader, PageTitle } from '@components/ui/page-header'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {

@@ -1,7 +1,14 @@
-import { DataTablePagination } from '@components/data-table/data-table-pagination'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@components/ui/table'
+import { DataTablePagination } from '@/components/data-table/data-table-pagination'
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table'
+import { cn } from '@/lib/utils'
 import { getCommonPinningStyles } from '@lib/data-table'
-import { cn } from '@lib/utils'
 import { flexRender, type Table as TanstackTable } from '@tanstack/react-table'
 import type * as React from 'react'
 

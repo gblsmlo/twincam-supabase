@@ -6,9 +6,9 @@ import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
-} from '@components/ui/sidebar'
-import type { Route } from '@shared/config/routes'
-import { toSlug } from '@utils/to-slug'
+} from '@/components/ui/sidebar'
+import type { Route } from '@/shared/config/routes'
+import { toSlug } from '@/utils/to-slug'
 import Link from 'next/link'
 
 export function NavMain({ items }: { items: Route[] }) {

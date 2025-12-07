@@ -1,52 +1,53 @@
 'use server'
 
-import { authServer } from '@infra/auth/server'
-import { handleAuthError } from '@shared/errors/error-handler'
-import { failure, type Result, success } from '@shared/errors/result'
+import { createClient } from '@/lib/supabase/server'
+import { handleAuthError } from '@/shared/errors/error-handler'
+import { failure, type Result, success } from '@/shared/errors/result'
 import { type SignUpFormData, signUpSchema } from '../schemas'
 
 type SignUpOutput = {
 	redirectTo: string
 }
 
-export const signUpAction = async (formData: SignUpFormData): Promise<Result<SignUpOutput>> => {
-	const validatedFields = signUpSchema.safeParse(formData)
+const REDIRECT_TO = '/auth/login'
 
-	if (!validatedFields.success) {
+export const signUpAction = async (formData: SignUpFormData): Promise<Result<SignUpOutput>> => {
+	const validated = signUpSchema.safeParse(formData)
+
+	if (!validated.success) {
 		return failure({
-			details: validatedFields.error.flatten().fieldErrors,
-			error: 'Dados Inválidos',
-			message: 'Por favor, corrija os campos destacados.',
+			details: validated.error.cause,
+			error: validated.error.name,
+			message: validated.error.message,
 			type: 'VALIDATION_ERROR',
 		})
 	}
 
-	const input = {
-		email: validatedFields.data.email,
-		name: validatedFields.data.name,
-		password: validatedFields.data.password,
-	}
-
 	try {
-		const response = await authServer.api.signUpEmail({
-			asResponse: true,
-			body: input,
+		const supabase = await createClient()
+
+		const { error: authError } = await supabase.auth.signUp({
+			email: validated.data.email,
+			options: {
+				data: {
+					display_name: validated.data.name,
+					full_name: validated.data.name,
+				},
+				emailRedirectTo: REDIRECT_TO,
+			},
+			password: validated.data.password,
 		})
 
-		const data = await response.json()
-
-		const { code, message } = data
-
-		if (!response.ok) {
+		if (authError) {
 			return failure({
-				error: code || 'Erro no cadastro',
-				message: message || 'Não foi possível criar a conta.',
+				error: authError.name || 'Erro no cadastro',
+				message: authError.message || 'Não foi possível criar a conta.',
 				type: 'AUTHORIZATION_ERROR',
 			})
 		}
 
 		return success({
-			redirectTo: '/dashboard',
+			redirectTo: REDIRECT_TO,
 		})
 	} catch (error) {
 		return handleAuthError(error)
