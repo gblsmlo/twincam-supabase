@@ -17,11 +17,13 @@ import type { Space, SpaceInsert, SpaceUpdate } from '../types'
 import { SpaceDrizzleRepository } from './space-drizzle-repository'
 
 const mockSpace: Space = {
+	createdAt: new Date(),
 	description: 'Test space description',
 	id: '550e8400-e29b-41d4-a716-446655440000',
 	name: 'Test Space',
 	ownerId: '550e8400-e29b-41d4-a716-446655440001',
 	slug: 'test-space',
+	updatedAt: new Date(),
 }
 
 const mockSpaceInsert: SpaceInsert = {

@@ -18,12 +18,14 @@ import type { Project, ProjectInsert, ProjectUpdate } from '../types'
 import { ProjectDrizzleRepository } from './project-drizzle-repository'
 
 const mockProject: Project = {
+	createdAt: new Date(),
 	description: 'Test project description',
 	id: '550e8400-e29b-41d4-a716-446655440200',
 	name: 'Test Project',
 	ownerId: '550e8400-e29b-41d4-a716-446655440001',
 	slug: 'test-project',
 	spaceId: '550e8400-e29b-41d4-a716-446655440000',
+	updatedAt: new Date(),
 }
 
 const mockProjectInsert: ProjectInsert = {
