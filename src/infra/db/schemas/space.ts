@@ -1,5 +1,6 @@
 import { pgTable, text, uuid } from 'drizzle-orm/pg-core'
 import { authUsers } from 'drizzle-orm/supabase'
+import { auditFields } from '../helpers'
 
 export const spacesTable = pgTable('spaces', {
 	description: text(),
@@ -9,4 +10,5 @@ export const spacesTable = pgTable('spaces', {
 		.notNull()
 		.references(() => authUsers.id, { onDelete: 'cascade' }),
 	slug: text().notNull(),
+	...auditFields,
 })
