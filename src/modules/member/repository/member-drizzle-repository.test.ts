@@ -16,9 +16,11 @@ import type { Member, MemberInsert, MemberUpdate } from '../types'
 import { MemberDrizzleRepository } from './member-drizzle-repository'
 
 const mockMember: Member = {
+	createdAt: new Date(),
 	id: '550e8400-e29b-41d4-a716-446655440010',
 	role: 'member',
 	spaceId: '550e8400-e29b-41d4-a716-446655440000',
+	updatedAt: new Date(),
 	userId: '550e8400-e29b-41d4-a716-446655440011',
 }
 
