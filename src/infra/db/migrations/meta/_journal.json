@@ -21,6 +21,13 @@
 			"when": 1765323142471,
 			"tag": "0002_grey_lucky_pierre",
 			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1765326870388,
+			"tag": "0003_rare_night_thrasher",
+			"breakpoints": true
 		}
 	],
 	"version": "7"
