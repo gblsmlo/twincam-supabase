@@ -13,7 +13,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spiner'
 import { isFailure, isSuccess } from '@/shared/errors/result'
-import { sleep } from '@/utils/sleep'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { redirect } from 'next/navigation'
 import { useTransition } from 'react'
@@ -56,8 +55,6 @@ export function SignUpForm() {
 
 			if (isSuccess(result)) {
 				toast.success('Conta criada com sucesso!')
-
-				await sleep(2000)
 
 				redirect(result.data.redirectTo)
 			}

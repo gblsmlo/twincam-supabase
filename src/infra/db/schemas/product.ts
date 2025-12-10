@@ -3,9 +3,9 @@ import { auditFields } from '../helpers'
 import { pricesTable } from './price'
 
 export const productsTable = pgTable('products', {
-	description: text('description').notNull(),
-	id: uuid('id').primaryKey().defaultRandom(),
-	name: text('name').notNull(),
-	priceId: uuid('price_id').references(() => pricesTable.id),
+	_id: uuid('id').primaryKey().defaultRandom(),
+	description: text().notNull(),
+	name: text().notNull(),
+	priceId: uuid('price_id').references(() => pricesTable._id),
 	...auditFields,
 })

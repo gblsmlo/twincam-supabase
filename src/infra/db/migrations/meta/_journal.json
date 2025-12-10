@@ -28,6 +28,13 @@
 			"when": 1765326870388,
 			"tag": "0003_rare_night_thrasher",
 			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "7",
+			"when": 1765329581035,
+			"tag": "0004_sturdy_ricochet",
+			"breakpoints": true
 		}
 	],
 	"version": "7"

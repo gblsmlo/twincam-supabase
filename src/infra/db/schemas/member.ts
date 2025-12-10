@@ -4,12 +4,12 @@ import { auditFields } from '../helpers'
 import { spacesTable } from './space'
 
 export const membersTable = pgTable('members', {
-	id: uuid().primaryKey(),
+	_id: uuid('id').primaryKey().defaultRandom(),
 	role: text().notNull().default('member'),
-	spaceId: uuid()
+	spaceId: uuid('space_id')
 		.notNull()
-		.references(() => spacesTable.id, { onDelete: 'cascade' }),
-	userId: uuid()
+		.references(() => spacesTable._id, { onDelete: 'cascade' }),
+	userId: uuid('user_id')
 		.notNull()
 		.references(() => authUsers.id, { onDelete: 'cascade' }),
 	...auditFields,
