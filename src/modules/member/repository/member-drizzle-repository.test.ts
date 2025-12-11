@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/infra/db', () => ({
 	db: {},
 	membersTable: {
-		id: 'mock-id',
+		_id: 'mock-id',
 		role: 'mock-role',
 		spaceId: 'mock-spaceId',
 		userId: 'mock-userId',
@@ -16,8 +16,8 @@ import type { Member, MemberInsert, MemberUpdate } from '../types'
 import { MemberDrizzleRepository } from './member-drizzle-repository'
 
 const mockMember: Member = {
+	_id: '550e8400-e29b-41d4-a716-446655440010',
 	createdAt: new Date(),
-	id: '550e8400-e29b-41d4-a716-446655440010',
 	role: 'member',
 	spaceId: '550e8400-e29b-41d4-a716-446655440000',
 	updatedAt: new Date(),
@@ -25,7 +25,7 @@ const mockMember: Member = {
 }
 
 const mockMemberInsert: MemberInsert = {
-	id: mockMember.id,
+	_id: mockMember._id,
 	role: mockMember.role,
 	spaceId: mockMember.spaceId,
 	userId: mockMember.userId,
@@ -83,7 +83,7 @@ describe('MemberDrizzleRepository', () => {
 
 		it('should create member with only required fields', async () => {
 			const minimalInsert: MemberInsert = {
-				id: mockMember.id,
+				_id: mockMember._id,
 				spaceId: mockMember.spaceId,
 				userId: mockMember.userId,
 			}
@@ -118,7 +118,7 @@ describe('MemberDrizzleRepository', () => {
 
 			repository = new MemberDrizzleRepository(mockDb)
 
-			const result = await repository.update(mockMember.id, mockMemberUpdate)
+			const result = await repository.update(mockMember._id, mockMemberUpdate)
 
 			expect(mockUpdate).toHaveBeenCalledWith(membersTable)
 			expect(mockSet).toHaveBeenCalled()
@@ -145,7 +145,7 @@ describe('MemberDrizzleRepository', () => {
 
 			repository = new MemberDrizzleRepository(mockDb)
 
-			await repository.update(mockMember.id, mockMemberUpdate)
+			await repository.update(mockMember._id, mockMemberUpdate)
 			const dateAfter = new Date()
 
 			const setCallArg = mockSet.mock.calls[0][0]
@@ -166,7 +166,7 @@ describe('MemberDrizzleRepository', () => {
 
 			repository = new MemberDrizzleRepository(mockDb)
 
-			await expect(repository.update(mockMember.id, mockMemberUpdate)).rejects.toThrow(
+			await expect(repository.update(mockMember._id, mockMemberUpdate)).rejects.toThrow(
 				'Update failed',
 			)
 		})
@@ -190,7 +190,7 @@ describe('MemberDrizzleRepository', () => {
 
 	describe('delete', () => {
 		it('should delete a member successfully and return deletedId', async () => {
-			const mockReturning = vi.fn().mockResolvedValue([{ deletedId: mockMember.id }])
+			const mockReturning = vi.fn().mockResolvedValue([{ deletedId: mockMember._id }])
 			const mockWhere = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockDelete = vi.fn().mockReturnValue({ where: mockWhere })
 
@@ -200,12 +200,12 @@ describe('MemberDrizzleRepository', () => {
 
 			repository = new MemberDrizzleRepository(mockDb)
 
-			const result = await repository.delete(mockMember.id)
+			const result = await repository.delete(mockMember._id)
 
 			expect(mockDelete).toHaveBeenCalledWith(membersTable)
 			expect(mockWhere).toHaveBeenCalled()
 			expect(mockReturning).toHaveBeenCalled()
-			expect(result).toEqual({ deletedId: mockMember.id })
+			expect(result).toEqual({ deletedId: mockMember._id })
 		})
 
 		it('should propagate error when delete fails', async () => {
@@ -220,7 +220,7 @@ describe('MemberDrizzleRepository', () => {
 
 			repository = new MemberDrizzleRepository(mockDb)
 
-			await expect(repository.delete(mockMember.id)).rejects.toThrow('Delete failed')
+			await expect(repository.delete(mockMember._id)).rejects.toThrow('Delete failed')
 		})
 
 		it('should handle attempt to delete non-existent record', async () => {
@@ -253,7 +253,7 @@ describe('MemberDrizzleRepository', () => {
 
 			repository = new MemberDrizzleRepository(mockDb)
 
-			const result = await repository.findById(mockMember.id)
+			const result = await repository.findById(mockMember._id)
 
 			expect(mockSelect).toHaveBeenCalled()
 			expect(mockFrom).toHaveBeenCalledWith(membersTable)
@@ -292,7 +292,7 @@ describe('MemberDrizzleRepository', () => {
 
 			repository = new MemberDrizzleRepository(mockDb)
 
-			await expect(repository.findById(mockMember.id)).rejects.toThrow('Query failed')
+			await expect(repository.findById(mockMember._id)).rejects.toThrow('Query failed')
 		})
 	})
 
@@ -402,7 +402,7 @@ describe('MemberDrizzleRepository', () => {
 		it('should return multiple members when found', async () => {
 			const secondMember: Member = {
 				...mockMember,
-				id: '550e8400-e29b-41d4-a716-446655440012',
+				_id: '550e8400-e29b-41d4-a716-446655440012',
 				userId: '550e8400-e29b-41d4-a716-446655440013',
 			}
 			const mockWhere = vi.fn().mockResolvedValue([mockMember, secondMember])

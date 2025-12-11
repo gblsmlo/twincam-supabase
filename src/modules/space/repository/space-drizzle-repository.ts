@@ -18,7 +18,7 @@ export class SpaceDrizzleRepository implements SpaceRepository {
 			updatedAt: new Date(),
 		}
 
-		const [result] = await this.db.update(spacesTable).set(update).where(eq(spacesTable.id, id))
+		const [result] = await this.db.update(spacesTable).set(update).where(eq(spacesTable._id, id))
 
 		return result
 	}
@@ -26,8 +26,8 @@ export class SpaceDrizzleRepository implements SpaceRepository {
 	async delete(id: string): Promise<{ deletedId: string }> {
 		const [result] = await this.db
 			.delete(spacesTable)
-			.where(eq(spacesTable.id, id))
-			.returning({ deletedId: spacesTable.id })
+			.where(eq(spacesTable._id, id))
+			.returning({ deletedId: spacesTable._id })
 
 		return {
 			deletedId: result?.deletedId,

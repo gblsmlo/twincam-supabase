@@ -18,9 +18,9 @@ import type { Project, ProjectInsert, ProjectUpdate } from '../types'
 import { ProjectDrizzleRepository } from './project-drizzle-repository'
 
 const mockProject: Project = {
+	_id: '550e8400-e29b-41d4-a716-446655440200',
 	createdAt: new Date(),
 	description: 'Test project description',
-	id: '550e8400-e29b-41d4-a716-446655440200',
 	name: 'Test Project',
 	ownerId: '550e8400-e29b-41d4-a716-446655440001',
 	slug: 'test-project',
@@ -29,8 +29,8 @@ const mockProject: Project = {
 }
 
 const mockProjectInsert: ProjectInsert = {
+	_id: mockProject._id,
 	description: mockProject.description,
-	id: mockProject.id,
 	name: mockProject.name,
 	ownerId: mockProject.ownerId,
 	slug: mockProject.slug,
@@ -90,7 +90,7 @@ describe('ProjectDrizzleRepository', () => {
 
 		it('should create project with only required fields', async () => {
 			const minimalInsert: ProjectInsert = {
-				id: mockProject.id,
+				_id: mockProject._id,
 				name: mockProject.name,
 				ownerId: mockProject.ownerId,
 				slug: mockProject.slug,
@@ -127,7 +127,7 @@ describe('ProjectDrizzleRepository', () => {
 
 			repository = new ProjectDrizzleRepository(mockDb)
 
-			const result = await repository.update(mockProject.id, mockProjectUpdate)
+			const result = await repository.update(mockProject._id, mockProjectUpdate)
 
 			expect(mockUpdate).toHaveBeenCalledWith(projectsTable)
 			expect(mockSet).toHaveBeenCalled()
@@ -155,7 +155,7 @@ describe('ProjectDrizzleRepository', () => {
 
 			repository = new ProjectDrizzleRepository(mockDb)
 
-			await repository.update(mockProject.id, mockProjectUpdate)
+			await repository.update(mockProject._id, mockProjectUpdate)
 			const dateAfter = new Date()
 
 			const setCallArg = mockSet.mock.calls[0][0]
@@ -176,7 +176,7 @@ describe('ProjectDrizzleRepository', () => {
 
 			repository = new ProjectDrizzleRepository(mockDb)
 
-			await expect(repository.update(mockProject.id, mockProjectUpdate)).rejects.toThrow(
+			await expect(repository.update(mockProject._id, mockProjectUpdate)).rejects.toThrow(
 				'Update failed',
 			)
 		})
@@ -200,7 +200,7 @@ describe('ProjectDrizzleRepository', () => {
 
 	describe('delete', () => {
 		it('should delete a project successfully and return deletedId', async () => {
-			const mockReturning = vi.fn().mockResolvedValue([{ deletedId: mockProject.id }])
+			const mockReturning = vi.fn().mockResolvedValue([{ deletedId: mockProject._id }])
 			const mockWhere = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockDelete = vi.fn().mockReturnValue({ where: mockWhere })
 
@@ -210,12 +210,12 @@ describe('ProjectDrizzleRepository', () => {
 
 			repository = new ProjectDrizzleRepository(mockDb)
 
-			const result = await repository.delete(mockProject.id)
+			const result = await repository.delete(mockProject._id)
 
 			expect(mockDelete).toHaveBeenCalledWith(projectsTable)
 			expect(mockWhere).toHaveBeenCalled()
 			expect(mockReturning).toHaveBeenCalled()
-			expect(result).toEqual({ deletedId: mockProject.id })
+			expect(result).toEqual({ deletedId: mockProject._id })
 		})
 
 		it('should propagate error when delete fails', async () => {
@@ -230,7 +230,7 @@ describe('ProjectDrizzleRepository', () => {
 
 			repository = new ProjectDrizzleRepository(mockDb)
 
-			await expect(repository.delete(mockProject.id)).rejects.toThrow('Delete failed')
+			await expect(repository.delete(mockProject._id)).rejects.toThrow('Delete failed')
 		})
 
 		it('should handle attempt to delete non-existent record', async () => {
@@ -263,7 +263,7 @@ describe('ProjectDrizzleRepository', () => {
 
 			repository = new ProjectDrizzleRepository(mockDb)
 
-			const result = await repository.findById(mockProject.id)
+			const result = await repository.findById(mockProject._id)
 
 			expect(mockSelect).toHaveBeenCalled()
 			expect(mockFrom).toHaveBeenCalledWith(projectsTable)
@@ -302,7 +302,7 @@ describe('ProjectDrizzleRepository', () => {
 
 			repository = new ProjectDrizzleRepository(mockDb)
 
-			await expect(repository.findById(mockProject.id)).rejects.toThrow('Query failed')
+			await expect(repository.findById(mockProject._id)).rejects.toThrow('Query failed')
 		})
 	})
 
@@ -360,7 +360,7 @@ describe('ProjectDrizzleRepository', () => {
 		it('should return multiple projects when found', async () => {
 			const secondProject: Project = {
 				...mockProject,
-				id: '550e8400-e29b-41d4-a716-446655440201',
+				_id: '550e8400-e29b-41d4-a716-446655440201',
 				name: 'Second Project',
 				slug: 'second-project',
 			}
@@ -491,7 +491,7 @@ describe('ProjectDrizzleRepository', () => {
 		it('should return multiple projects when found', async () => {
 			const secondProject: Project = {
 				...mockProject,
-				id: '550e8400-e29b-41d4-a716-446655440202',
+				_id: '550e8400-e29b-41d4-a716-446655440202',
 				name: 'Another Project',
 				slug: 'another-project',
 				spaceId: '550e8400-e29b-41d4-a716-446655440003',

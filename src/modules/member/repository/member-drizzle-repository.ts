@@ -18,7 +18,7 @@ export class MemberDrizzleRepository implements MemberRepository {
 			updatedAt: new Date(),
 		}
 
-		const [result] = await this.db.update(membersTable).set(update).where(eq(membersTable.id, id))
+		const [result] = await this.db.update(membersTable).set(update).where(eq(membersTable._id, id))
 
 		return result
 	}
@@ -26,8 +26,8 @@ export class MemberDrizzleRepository implements MemberRepository {
 	async delete(id: string): Promise<{ deletedId: string }> {
 		const [result] = await this.db
 			.delete(membersTable)
-			.where(eq(membersTable.id, id))
-			.returning({ deletedId: membersTable.id })
+			.where(eq(membersTable._id, id))
+			.returning({ deletedId: membersTable._id })
 
 		return {
 			deletedId: result?.deletedId,
@@ -38,7 +38,7 @@ export class MemberDrizzleRepository implements MemberRepository {
 		const [result] = await this.db
 			.select()
 			.from(membersTable)
-			.where(eq(membersTable.id, id))
+			.where(eq(membersTable._id, id))
 			.limit(1)
 
 		return result

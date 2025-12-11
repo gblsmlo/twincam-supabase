@@ -18,7 +18,10 @@ export class ProductDrizzleRepository implements ProductRepository {
 			updatedAt: new Date(),
 		}
 
-		const [result] = await this.db.update(productsTable).set(update).where(eq(productsTable.id, id))
+		const [result] = await this.db
+			.update(productsTable)
+			.set(update)
+			.where(eq(productsTable._id, id))
 
 		return result
 	}
@@ -26,8 +29,8 @@ export class ProductDrizzleRepository implements ProductRepository {
 	async delete(id: string): Promise<{ deletedId: string }> {
 		const [result] = await this.db
 			.delete(productsTable)
-			.where(eq(productsTable.id, id))
-			.returning({ deletedId: productsTable.id })
+			.where(eq(productsTable._id, id))
+			.returning({ deletedId: productsTable._id })
 
 		return {
 			deletedId: result?.deletedId,
@@ -38,7 +41,7 @@ export class ProductDrizzleRepository implements ProductRepository {
 		const [result] = await this.db
 			.select()
 			.from(productsTable)
-			.where(eq(productsTable.id, id))
+			.where(eq(productsTable._id, id))
 			.limit(1)
 
 		return result

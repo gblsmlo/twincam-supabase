@@ -21,7 +21,7 @@ export class SubscriptionDrizzleRepository implements SubscriptionRepository {
 		const [result] = await this.db
 			.update(subscriptionsTable)
 			.set(update)
-			.where(eq(subscriptionsTable.id, id))
+			.where(eq(subscriptionsTable._id, id))
 
 		return result
 	}
@@ -29,8 +29,8 @@ export class SubscriptionDrizzleRepository implements SubscriptionRepository {
 	async delete(id: string): Promise<{ deletedId: string }> {
 		const [result] = await this.db
 			.delete(subscriptionsTable)
-			.where(eq(subscriptionsTable.id, id))
-			.returning({ deletedId: subscriptionsTable.id })
+			.where(eq(subscriptionsTable._id, id))
+			.returning({ deletedId: subscriptionsTable._id })
 
 		return {
 			deletedId: result?.deletedId,
@@ -41,7 +41,7 @@ export class SubscriptionDrizzleRepository implements SubscriptionRepository {
 		const [result] = await this.db
 			.select()
 			.from(subscriptionsTable)
-			.where(eq(subscriptionsTable.id, id))
+			.where(eq(subscriptionsTable._id, id))
 			.limit(1)
 
 		return result

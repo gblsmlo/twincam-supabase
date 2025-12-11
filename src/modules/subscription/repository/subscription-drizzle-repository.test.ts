@@ -20,10 +20,10 @@ import type { Subscription, SubscriptionInsert, SubscriptionUpdate } from '../ty
 import { SubscriptionDrizzleRepository } from './subscription-drizzle-repository'
 
 const mockSubscription: Subscription = {
+	_id: '550e8400-e29b-41d4-a716-446655440000',
 	createdAt: new Date(),
 	customerId: '550e8400-e29b-41d4-a716-446655440001',
-	endedAt: null,
-	id: '550e8400-e29b-41d4-a716-446655440000',
+	finishedAt: null,
 	planName: 'Pro Plan',
 	priceId: '550e8400-e29b-41d4-a716-446655440002',
 	startedAt: new Date(),
@@ -33,14 +33,14 @@ const mockSubscription: Subscription = {
 }
 
 const mockSubscriptionInsert: SubscriptionInsert = {
+	_id: mockSubscription._id,
 	customerId: mockSubscription.customerId,
-	id: mockSubscription.id,
 	planName: mockSubscription.planName,
 	priceId: mockSubscription.priceId,
 }
 
 const mockSubscriptionUpdate: SubscriptionUpdate = {
-	endedAt: new Date(),
+	finishedAt: new Date(),
 	status: 'canceled',
 }
 
@@ -92,8 +92,8 @@ describe('SubscriptionDrizzleRepository', () => {
 
 		it('should create subscription with only required fields', async () => {
 			const minimalInsert: SubscriptionInsert = {
+				_id: mockSubscription._id,
 				customerId: mockSubscription.customerId,
-				id: mockSubscription.id,
 				planName: mockSubscription.planName,
 			}
 			const minimalSubscription = { ...mockSubscription, priceId: null }
@@ -127,7 +127,7 @@ describe('SubscriptionDrizzleRepository', () => {
 
 			repository = new SubscriptionDrizzleRepository(mockDb)
 
-			const result = await repository.update(mockSubscription.id, mockSubscriptionUpdate)
+			const result = await repository.update(mockSubscription._id, mockSubscriptionUpdate)
 
 			expect(mockUpdate).toHaveBeenCalledWith(subscriptionsTable)
 			expect(mockSet).toHaveBeenCalled()
@@ -136,7 +136,7 @@ describe('SubscriptionDrizzleRepository', () => {
 			expect(setCallArg).toHaveProperty('updatedAt')
 			expect(setCallArg.updatedAt).toBeInstanceOf(Date)
 			expect(setCallArg.status).toBe(mockSubscriptionUpdate.status)
-			expect(setCallArg.endedAt).toBe(mockSubscriptionUpdate.endedAt)
+			expect(setCallArg.finishedAt).toBe(mockSubscriptionUpdate.finishedAt)
 
 			expect(mockWhere).toHaveBeenCalled()
 			expect(result).toEqual(updatedSubscription)
@@ -155,7 +155,7 @@ describe('SubscriptionDrizzleRepository', () => {
 
 			repository = new SubscriptionDrizzleRepository(mockDb)
 
-			await repository.update(mockSubscription.id, mockSubscriptionUpdate)
+			await repository.update(mockSubscription._id, mockSubscriptionUpdate)
 			const dateAfter = new Date()
 
 			const setCallArg = mockSet.mock.calls[0][0]
@@ -176,7 +176,7 @@ describe('SubscriptionDrizzleRepository', () => {
 
 			repository = new SubscriptionDrizzleRepository(mockDb)
 
-			await expect(repository.update(mockSubscription.id, mockSubscriptionUpdate)).rejects.toThrow(
+			await expect(repository.update(mockSubscription._id, mockSubscriptionUpdate)).rejects.toThrow(
 				'Update failed',
 			)
 		})
@@ -200,7 +200,7 @@ describe('SubscriptionDrizzleRepository', () => {
 
 	describe('delete', () => {
 		it('should delete a subscription successfully and return deletedId', async () => {
-			const mockReturning = vi.fn().mockResolvedValue([{ deletedId: mockSubscription.id }])
+			const mockReturning = vi.fn().mockResolvedValue([{ deletedId: mockSubscription._id }])
 			const mockWhere = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockDelete = vi.fn().mockReturnValue({ where: mockWhere })
 
@@ -210,12 +210,12 @@ describe('SubscriptionDrizzleRepository', () => {
 
 			repository = new SubscriptionDrizzleRepository(mockDb)
 
-			const result = await repository.delete(mockSubscription.id)
+			const result = await repository.delete(mockSubscription._id)
 
 			expect(mockDelete).toHaveBeenCalledWith(subscriptionsTable)
 			expect(mockWhere).toHaveBeenCalled()
 			expect(mockReturning).toHaveBeenCalled()
-			expect(result).toEqual({ deletedId: mockSubscription.id })
+			expect(result).toEqual({ deletedId: mockSubscription._id })
 		})
 
 		it('should propagate error when deletion fails', async () => {
@@ -230,7 +230,7 @@ describe('SubscriptionDrizzleRepository', () => {
 
 			repository = new SubscriptionDrizzleRepository(mockDb)
 
-			await expect(repository.delete(mockSubscription.id)).rejects.toThrow('Delete failed')
+			await expect(repository.delete(mockSubscription._id)).rejects.toThrow('Delete failed')
 		})
 
 		it('should handle attempt to delete non-existent record', async () => {
@@ -263,7 +263,7 @@ describe('SubscriptionDrizzleRepository', () => {
 
 			repository = new SubscriptionDrizzleRepository(mockDb)
 
-			const result = await repository.findById(mockSubscription.id)
+			const result = await repository.findById(mockSubscription._id)
 
 			expect(mockSelect).toHaveBeenCalled()
 			expect(mockFrom).toHaveBeenCalledWith(subscriptionsTable)
@@ -302,7 +302,7 @@ describe('SubscriptionDrizzleRepository', () => {
 
 			repository = new SubscriptionDrizzleRepository(mockDb)
 
-			await expect(repository.findById(mockSubscription.id)).rejects.toThrow('Query failed')
+			await expect(repository.findById(mockSubscription._id)).rejects.toThrow('Query failed')
 		})
 	})
 

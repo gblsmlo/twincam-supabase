@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/infra/db', () => ({
 	db: {},
 	spacesTable: {
+		_id: 'mock-id',
 		description: 'mock-description',
-		id: 'mock-id',
 		name: 'mock-name',
 		ownerId: 'mock-ownerId',
 		slug: 'mock-slug',
@@ -17,9 +17,9 @@ import type { Space, SpaceInsert, SpaceUpdate } from '../types'
 import { SpaceDrizzleRepository } from './space-drizzle-repository'
 
 const mockSpace: Space = {
+	_id: '550e8400-e29b-41d4-a716-446655440000',
 	createdAt: new Date(),
 	description: 'Test space description',
-	id: '550e8400-e29b-41d4-a716-446655440000',
 	name: 'Test Space',
 	ownerId: '550e8400-e29b-41d4-a716-446655440001',
 	slug: 'test-space',
@@ -27,8 +27,8 @@ const mockSpace: Space = {
 }
 
 const mockSpaceInsert: SpaceInsert = {
+	_id: mockSpace._id,
 	description: mockSpace.description,
-	id: mockSpace.id,
 	name: mockSpace.name,
 	ownerId: mockSpace.ownerId,
 	slug: mockSpace.slug,
@@ -85,7 +85,7 @@ describe('SpaceDrizzleRepository', () => {
 
 		it('should create space with only required fields', async () => {
 			const minimalInsert: SpaceInsert = {
-				id: mockSpace.id,
+				_id: mockSpace._id,
 				name: mockSpace.name,
 				ownerId: mockSpace.ownerId,
 				slug: mockSpace.slug,
@@ -121,7 +121,7 @@ describe('SpaceDrizzleRepository', () => {
 
 			repository = new SpaceDrizzleRepository(mockDb)
 
-			const result = await repository.update(mockSpace.id, mockSpaceUpdate)
+			const result = await repository.update(mockSpace._id, mockSpaceUpdate)
 
 			expect(mockUpdate).toHaveBeenCalledWith(spacesTable)
 			expect(mockSet).toHaveBeenCalled()
@@ -149,7 +149,7 @@ describe('SpaceDrizzleRepository', () => {
 
 			repository = new SpaceDrizzleRepository(mockDb)
 
-			await repository.update(mockSpace.id, mockSpaceUpdate)
+			await repository.update(mockSpace._id, mockSpaceUpdate)
 			const dateAfter = new Date()
 
 			const setCallArg = mockSet.mock.calls[0][0]
@@ -170,7 +170,7 @@ describe('SpaceDrizzleRepository', () => {
 
 			repository = new SpaceDrizzleRepository(mockDb)
 
-			await expect(repository.update(mockSpace.id, mockSpaceUpdate)).rejects.toThrow(
+			await expect(repository.update(mockSpace._id, mockSpaceUpdate)).rejects.toThrow(
 				'Update failed',
 			)
 		})
@@ -194,7 +194,7 @@ describe('SpaceDrizzleRepository', () => {
 
 	describe('delete', () => {
 		it('should delete a space successfully and return deletedId', async () => {
-			const mockReturning = vi.fn().mockResolvedValue([{ deletedId: mockSpace.id }])
+			const mockReturning = vi.fn().mockResolvedValue([{ deletedId: mockSpace._id }])
 			const mockWhere = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockDelete = vi.fn().mockReturnValue({ where: mockWhere })
 
@@ -204,12 +204,12 @@ describe('SpaceDrizzleRepository', () => {
 
 			repository = new SpaceDrizzleRepository(mockDb)
 
-			const result = await repository.delete(mockSpace.id)
+			const result = await repository.delete(mockSpace._id)
 
 			expect(mockDelete).toHaveBeenCalledWith(spacesTable)
 			expect(mockWhere).toHaveBeenCalled()
 			expect(mockReturning).toHaveBeenCalled()
-			expect(result).toEqual({ deletedId: mockSpace.id })
+			expect(result).toEqual({ deletedId: mockSpace._id })
 		})
 
 		it('should propagar erro quando a deleção falhar', async () => {
@@ -224,7 +224,7 @@ describe('SpaceDrizzleRepository', () => {
 
 			repository = new SpaceDrizzleRepository(mockDb)
 
-			await expect(repository.delete(mockSpace.id)).rejects.toThrow('Delete failed')
+			await expect(repository.delete(mockSpace._id)).rejects.toThrow('Delete failed')
 		})
 
 		it('should handle attempt to delete non-existent record', async () => {

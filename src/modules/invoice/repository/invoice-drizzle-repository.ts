@@ -18,7 +18,10 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 			updatedAt: new Date(),
 		}
 
-		const [result] = await this.db.update(invoicesTable).set(update).where(eq(invoicesTable.id, id))
+		const [result] = await this.db
+			.update(invoicesTable)
+			.set(update)
+			.where(eq(invoicesTable._id, id))
 
 		return result
 	}
@@ -26,8 +29,8 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 	async delete(id: string): Promise<{ deletedId: string }> {
 		const [result] = await this.db
 			.delete(invoicesTable)
-			.where(eq(invoicesTable.id, id))
-			.returning({ deletedId: invoicesTable.id })
+			.where(eq(invoicesTable._id, id))
+			.returning({ deletedId: invoicesTable._id })
 
 		return {
 			deletedId: result?.deletedId,
@@ -38,7 +41,7 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 		const [result] = await this.db
 			.select()
 			.from(invoicesTable)
-			.where(eq(invoicesTable.id, id))
+			.where(eq(invoicesTable._id, id))
 			.limit(1)
 
 		return result
@@ -71,14 +74,14 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 				createdAt: invoicesTable.createdAt,
 				currency: invoicesTable.currency,
 				dueDate: invoicesTable.dueDate,
-				id: invoicesTable.id,
+				id: invoicesTable._id,
 				paidAt: invoicesTable.paidAt,
 				status: invoicesTable.status,
 				subscriptionId: invoicesTable.subscriptionId,
 				updatedAt: invoicesTable.updatedAt,
 			})
 			.from(invoicesTable)
-			.innerJoin(subscriptionsTable, eq(invoicesTable.subscriptionId, subscriptionsTable.id))
+			.innerJoin(subscriptionsTable, eq(invoicesTable.subscriptionId, subscriptionsTable._id))
 			.where(eq(subscriptionsTable.customerId, customerId))
 			.orderBy(desc(invoicesTable.createdAt))
 			.limit(1)
