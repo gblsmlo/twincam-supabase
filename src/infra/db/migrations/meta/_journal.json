@@ -16,25 +16,25 @@
 			"when": 1765312460596
 		},
 		{
+			"breakpoints": true,
 			"idx": 2,
-			"version": "7",
-			"when": 1765323142471,
 			"tag": "0002_grey_lucky_pierre",
-			"breakpoints": true
+			"version": "7",
+			"when": 1765323142471
 		},
 		{
+			"breakpoints": true,
 			"idx": 3,
-			"version": "7",
-			"when": 1765326870388,
 			"tag": "0003_rare_night_thrasher",
-			"breakpoints": true
+			"version": "7",
+			"when": 1765326870388
 		},
 		{
+			"breakpoints": true,
 			"idx": 4,
-			"version": "7",
-			"when": 1765329581035,
 			"tag": "0004_sturdy_ricochet",
-			"breakpoints": true
+			"version": "7",
+			"when": 1765329581035
 		}
 	],
 	"version": "7"

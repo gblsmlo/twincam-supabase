@@ -1,9 +1,11 @@
 'use client'
 
+import { DataTable } from '@/components/data-table'
+
 export function DataTableProduct() {
 	return (
 		<div className="data-table-container">
-			<h1>Data table product</h1>
+			<DataTable />
 		</div>
 	)
 }
