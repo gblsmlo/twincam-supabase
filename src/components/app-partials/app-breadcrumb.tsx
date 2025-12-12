@@ -9,7 +9,7 @@ import {
 	BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { allRoutes } from '@/shared/config/routes'
-import { toSlug } from '@/utils/to-slug'
+import { toSlug } from '@/shared/utils/to-slug'
 import type { LucideIcon } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useMemo } from 'react'

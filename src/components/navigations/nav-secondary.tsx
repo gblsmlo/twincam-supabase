@@ -8,7 +8,7 @@ import {
 	SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import type { Route } from '@/shared/config/routes'
-import { toSlug } from '@/utils/to-slug'
+import { toSlug } from '@/shared/utils/to-slug'
 import Link from 'next/link'
 import type { ComponentProps } from 'react'
 

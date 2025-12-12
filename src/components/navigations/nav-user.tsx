@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/sidebar'
 import { signOut, useSession } from '@/infra/auth/client'
 import { type Route, userRoutes } from '@/shared/config/routes'
-import { toSlug } from '@/utils/to-slug'
-import { IconDotsVertical, IconLogout } from '@tabler/icons-react'
+import { toSlug } from '@/shared/utils/to-slug'
+import { Dot, LogOutIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { type ComponentProps, useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -90,7 +90,7 @@ export function NavUser({ items, ...props }: NavUserProps) {
 								<span className="truncate font-medium">{user.name}</span>
 								<span className="truncate text-muted-foreground text-xs">{user.email}</span>
 							</div>
-							<IconDotsVertical className="ml-auto size-4" />
+							<Dot className="ml-auto size-4" />
 						</SidebarMenuButton>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
@@ -124,7 +124,7 @@ export function NavUser({ items, ...props }: NavUserProps) {
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem onClick={handleSignOut}>
-							<IconLogout />
+							<LogOutIcon />
 							Log out
 						</DropdownMenuItem>
 					</DropdownMenuContent>
