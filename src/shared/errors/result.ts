@@ -31,7 +31,7 @@ export const success = <T>(data: T, message?: string): Success<T> => ({
 type FailureProps<E> = {
 	type: (typeof errorType)[number]
 	message: string
-	error?: string
+	error?: string | Error
 	details?: E
 }
 
