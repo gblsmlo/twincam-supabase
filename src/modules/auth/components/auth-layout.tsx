@@ -2,11 +2,11 @@ import { Logo } from '@/components/logo'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { AuthGuardPrivate } from './auth-guard-privated'
+import { AuthGuard } from './auth-guard'
 
 export function AuthLayout({ children }: { children: ReactNode }) {
 	return (
-		<AuthGuardPrivate>
+		<AuthGuard>
 			<div className="grid min-h-svh lg:grid-cols-5">
 				<div className="flex flex-col gap-4 p-6 md:p-10 lg:col-span-3">
 					<div className="flex justify-center gap-2 md:justify-start">
@@ -22,6 +22,6 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 					<Image alt="Login" className="object-cover opacity-70" fill src="/auth.jpg" />
 				</div>
 			</div>
-		</AuthGuardPrivate>
+		</AuthGuard>
 	)
 }

@@ -15,45 +15,38 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '@/components/ui/sidebar'
+import { useAuth } from '@/modules/auth'
 import { type Route, userRoutes } from '@/shared/config/routes'
 import { toSlug } from '@/shared/utils/to-slug'
 import { Dot, LogOutIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import type { ComponentProps } from 'react'
+import { type ComponentProps, useCallback, useMemo } from 'react'
 import { NavUserAvatar } from './nav-user-avatar'
 
 type NavUserProps = ComponentProps<'ul'> & {
 	items: Route[]
-	user: {
-		name: string
-		email: string
-		avatar: string
-	}
-}
-
-type User = {
-	name: string
-	email?: string
-	image?: string | null
 }
 
 export function NavUser({ items, ...props }: NavUserProps) {
 	const { isMobile } = useSidebar()
+
 	const router = useRouter()
+	const { user, signOut } = useAuth()
 
-	const handleSignOut = async () => {
-		console.log('handleSignOut')
-	}
+	const handleSignOut = useCallback(async () => {
+		await signOut()
+	}, [signOut])
 
-	const user = {
-		email: 'john-doe@acne.com',
-		image: 'https://avatars.githubusercontent.com/u/50754836?v=4',
-		name: 'John Doe',
-	} satisfies User
+	const handleNavigate = useCallback(
+		(link: string) => {
+			router.push(link)
+		},
+		[router],
+	)
 
-	if (!user) {
-		return null
-	}
+	const cachedUser = useMemo(() => user, [user])
+
+	if (!cachedUser) return null
 
 	return (
 		<SidebarMenu {...props}>
@@ -64,11 +57,11 @@ export function NavUser({ items, ...props }: NavUserProps) {
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 							size="lg"
 						>
-							<NavUserAvatar image={user?.image} name={user.name} />
+							<NavUserAvatar name={cachedUser.name} />
 
 							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-medium">{user.name}</span>
-								<span className="truncate text-muted-foreground text-xs">{user.email}</span>
+								<span className="truncate font-medium">{cachedUser.name}</span>
+								<span className="truncate text-muted-foreground text-xs">{cachedUser.email}</span>
 							</div>
 							<Dot className="ml-auto size-4" />
 						</SidebarMenuButton>
@@ -81,11 +74,11 @@ export function NavUser({ items, ...props }: NavUserProps) {
 					>
 						<DropdownMenuLabel className="p-0 font-normal">
 							<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-								<NavUserAvatar image={user?.image} name={user.name} />
+								<NavUserAvatar name={cachedUser.name} />
 
 								<div className="grid flex-1 text-left text-sm leading-tight">
-									<span className="truncate font-medium">{user.name}</span>
-									<span className="truncate text-muted-foreground text-xs">{user.email}</span>
+									<span className="truncate font-medium">{cachedUser.name}</span>
+									<span className="truncate text-muted-foreground text-xs">{cachedUser.email}</span>
 								</div>
 							</div>
 						</DropdownMenuLabel>
@@ -95,7 +88,7 @@ export function NavUser({ items, ...props }: NavUserProps) {
 								return (
 									<DropdownMenuItem
 										key={toSlug(route.label)}
-										onClick={() => router.push(route.link)}
+										onClick={() => handleNavigate(route.link)}
 									>
 										{route.label}
 									</DropdownMenuItem>

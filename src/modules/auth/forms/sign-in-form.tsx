@@ -23,10 +23,12 @@ import { toast } from 'sonner'
 import { signInAction } from '../actions'
 import { GoogleProviderButton } from '../components/google-provider-button'
 import { ProviderSeparetor } from '../components/separetor'
+import { useAuth } from '../hooks/use-auth'
 import { type SignInFormData, signInSchema } from '../schemas'
 
 export function SignInForm() {
 	const [isPending, startTransition] = useTransition()
+	const { refresh } = useAuth()
 
 	const form = useForm<SignInFormData>({
 		defaultValues: {
@@ -49,8 +51,9 @@ export function SignInForm() {
 			}
 
 			if (isSuccess(result)) {
-				toast.success('Login realizado com sucesso!')
+				await refresh()
 
+				toast.success('Login realizado com sucesso!')
 				redirect(result.data.redirectTo)
 			}
 		})
