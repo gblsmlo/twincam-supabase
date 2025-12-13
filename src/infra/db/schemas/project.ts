@@ -13,6 +13,6 @@ export const projectsTable = pgTable('projects', {
 	slug: text().notNull().unique(),
 	spaceId: uuid('space_id')
 		.notNull()
-		.references(() => spacesTable.id, { onDelete: 'cascade' }),
+		.references(() => spacesTable._id, { onDelete: 'cascade' }),
 	...auditFields,
 })

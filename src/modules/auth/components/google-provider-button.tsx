@@ -1,7 +1,6 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { authClient } from '@/infra/auth/client'
 import { useTransition } from 'react'
 
 export function GoogleProviderButton() {
@@ -9,10 +8,7 @@ export function GoogleProviderButton() {
 
 	const handleGoogleSignIn = async () => {
 		startTransition(async () => {
-			await authClient.signIn.social({
-				callbackURL: '/dashboard',
-				provider: 'google',
-			})
+			console.log('handleGoogleSignIn')
 		})
 	}
 

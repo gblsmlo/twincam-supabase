@@ -15,13 +15,11 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '@/components/ui/sidebar'
-import { signOut, useSession } from '@/infra/auth/client'
 import { type Route, userRoutes } from '@/shared/config/routes'
 import { toSlug } from '@/shared/utils/to-slug'
 import { Dot, LogOutIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { type ComponentProps, useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import type { ComponentProps } from 'react'
 import { NavUserAvatar } from './nav-user-avatar'
 
 type NavUserProps = ComponentProps<'ul'> & {
@@ -40,36 +38,18 @@ type User = {
 }
 
 export function NavUser({ items, ...props }: NavUserProps) {
-	const [user, setUser] = useState<User | null>()
 	const { isMobile } = useSidebar()
-	const { data: session } = useSession()
 	const router = useRouter()
 
-	useEffect(() => {
-		if (!session?.user) {
-			setUser(null)
-			return
-		}
-
-		setUser({
-			email: session.user.email,
-			image: session.user.image,
-			name: session.user.name,
-		})
-	}, [session?.user])
-
 	const handleSignOut = async () => {
-		await signOut({
-			fetchOptions: {
-				onError: () => {
-					toast.error('Ocorreu um erro ao sair. Tente novamente.')
-				},
-				onSuccess: () => {
-					router.push('/auth/login')
-				},
-			},
-		})
+		console.log('handleSignOut')
 	}
+
+	const user = {
+		email: 'john-doe@acne.com',
+		image: 'https://avatars.githubusercontent.com/u/50754836?v=4',
+		name: 'John Doe',
+	} satisfies User
 
 	if (!user) {
 		return null

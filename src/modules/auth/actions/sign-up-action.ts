@@ -1,7 +1,6 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { handleAuthError } from '@/shared/errors/error-handler'
 import { failure, type Result, success } from '@/shared/errors/result'
 import { type SignUpFormData, signUpSchema } from '../schemas'
 
@@ -50,6 +49,18 @@ export const signUpAction = async (formData: SignUpFormData): Promise<Result<Sig
 			redirectTo: REDIRECT_TO,
 		})
 	} catch (error) {
-		return handleAuthError(error)
+		if (error instanceof Error) {
+			return failure({
+				error: error.name,
+				message: error.message,
+				type: 'UNKNOWN_ERROR',
+			})
+		}
+
+		return failure({
+			error: 'UnknownError',
+			message: 'An unknown error occurred.',
+			type: 'UNKNOWN_ERROR',
+		})
 	}
 }
