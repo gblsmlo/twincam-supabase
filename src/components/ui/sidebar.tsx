@@ -297,7 +297,7 @@ function SidebarInset({ className, ...props }: ComponentProps<'main'>) {
 	return (
 		<main
 			className={cn(
-				'relative flex w-full flex-1 flex-col border bg-sidebar-primary text-sidebar-primary-foreground',
+				'relative flex w-full flex-1 flex-col border bg-sidebar-primary text-foreground',
 				'md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded md:peer-data-[variant=inset]:shadow-xs',
 				className,
 			)}
