@@ -4,21 +4,20 @@ import { DataTable } from '@/components/data-table/data-table'
 import { DataTableToolbar } from '@/components/data-table/data-table-toolbar'
 import { useDataTable } from '@/hooks/use-data-table'
 import type { ColumnDef } from '@tanstack/react-table'
-import { Button } from '@tc96/ui-react'
 
 interface DataTableViewProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
 	data: TData[]
 	pageCount?: number
 	getRowId?: (row: TData) => string
-	onCreateNew: () => void
+	actionToCreate?: React.ReactNode
 }
 
 export function DataTableView<TData, TValue>({
 	columns,
 	data,
 	pageCount = 1,
-	onCreateNew,
+	actionToCreate,
 	getRowId,
 }: DataTableViewProps<TData, TValue>) {
 	const { table } = useDataTable({
@@ -28,17 +27,9 @@ export function DataTableView<TData, TValue>({
 		pageCount,
 	})
 
-	function handleCreateNew() {
-		onCreateNew()
-	}
-
 	return (
 		<DataTable table={table}>
-			<DataTableToolbar table={table}>
-				<Button onClick={handleCreateNew} size="sm">
-					Add New
-				</Button>
-			</DataTableToolbar>
+			<DataTableToolbar table={table}>{actionToCreate}</DataTableToolbar>
 		</DataTable>
 	)
 }

@@ -1,22 +1,35 @@
 'use server'
 
-import type { Result } from '@/shared/errors'
+import { failure, type Result, success } from '@/shared/errors/result'
 import { productRepository } from '../repository/product-drizzle-repository'
 import type { Product } from '../types'
 
-type Output = {
-	data: Product[]
+type FindProductOutput = {
+	products: Product[]
 }
 
-export const findProductAction = async (): Promise<Result<Output>> => {
-	const repository = productRepository()
+export const findProductAction = async (): Promise<Result<FindProductOutput>> => {
+	try {
+		const repository = productRepository()
 
-	const products = await repository.findAll()
+		const products = await repository.findAll()
 
-	if (!products) {
-	}
+		return success({
+			products,
+		})
+	} catch (error) {
+		if (error instanceof Error) {
+			return failure({
+				error: error.name,
+				message: error.message || 'Não foi possível buscar os produtos.',
+				type: 'DATABASE_ERROR',
+			})
+		}
 
-	return {
-		data: products,
+		return failure({
+			error: 'Erro desconhecido',
+			message: 'Ocorreu um erro inesperado ao buscar os produtos.',
+			type: 'UNKNOWN_ERROR',
+		})
 	}
 }

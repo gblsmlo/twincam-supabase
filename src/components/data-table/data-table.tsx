@@ -1,3 +1,5 @@
+'use client'
+
 import { DataTablePagination } from '@/components/data-table/data-table-pagination'
 import {
 	Table,

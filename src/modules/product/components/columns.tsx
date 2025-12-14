@@ -5,9 +5,9 @@ import { Badge } from '@/components/ui/badge'
 import type { ColumnDef } from '@tanstack/react-table'
 import { format } from 'date-fns'
 import type { Product } from '../types'
-import { DataTableProductsRowActions } from './data-table-product-row-actions'
+import { DataTableProductsRowActions } from './row-actions'
 
-export const productColumns: ColumnDef<Product>[] = [
+export const dataTableProductColumns: ColumnDef<Product>[] = [
 	{
 		accessorKey: 'name',
 		cell: ({ row }) => <div className="font-medium">{row.getValue('name')}</div>,

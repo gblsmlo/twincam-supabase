@@ -1,6 +1,6 @@
 import { MainContent } from '@/components/ui/main-content'
 import { PageDescription, PageHeader, PageTitle } from '@/components/ui/page-header'
-import { DataTableProducts } from '@/modules/product'
+import { ProductsView } from '@/modules/product/components/products-view'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -18,8 +18,7 @@ export default async function Page() {
 				<PageTitle>{title}</PageTitle>
 				<PageDescription>{description}</PageDescription>
 			</PageHeader>
-
-			<DataTableProducts />
+			<ProductsView />
 		</MainContent>
 	)
 }
