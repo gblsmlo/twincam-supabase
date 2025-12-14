@@ -18,7 +18,7 @@ import {
 } from '@/shared/config/routes'
 import Link from 'next/link'
 import type * as React from 'react'
-import { Logo } from '../logo'
+import { Logo, LogoIcon } from '../logo'
 import { NavCRM } from '../navigations/nav-crm'
 import { NavMain } from '../navigations/nav-main'
 import { NavSecondary } from '../navigations/nav-secondary'
@@ -32,11 +32,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	return (
 		<Sidebar collapsible="icon" variant="inset" {...props}>
 			<SidebarHeader>
-				<Link className="flex items-center gap-2" href="/">
-					<Logo className="h-8 w-8" />
-					{!isCollapsed && (
-						<span className="font-semibold text-foreground dark:text-white">Acme</span>
-					)}
+				<Link className="flex items-center gap-2" href="/dashboard">
+					{!isCollapsed ? <Logo /> : <LogoIcon />}
 				</Link>
 			</SidebarHeader>
 			<SidebarContent>
@@ -47,14 +44,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				<NavSecondary className="mt-auto" items={secondaryRoutes} />
 			</SidebarContent>
 			<SidebarFooter className="mt-4 border-t pt-4">
-				<NavUser
-					items={userRoutes}
-					user={{
-						avatar: 'https://github.com/gabriel-melo.png',
-						email: 'gabriel.melo@acme.com',
-						name: 'Gabriel Melo',
-					}}
-				/>
+				<NavUser items={userRoutes} />
 			</SidebarFooter>
 		</Sidebar>
 	)
