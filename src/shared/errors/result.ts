@@ -1,10 +1,16 @@
-import type { AppErrorType } from './app-error'
+export const errorType = [
+	'NOT_FOUND_ERROR',
+	'VALIDATION_ERROR',
+	'DATABASE_ERROR',
+	'AUTHORIZATION_ERROR',
+	'UNKNOWN_ERROR',
+] as const
 
 export type Failure<E = unknown> = {
 	success: false
-	type: AppErrorType
+	type: (typeof errorType)[number]
 	message: string
-	error?: string
+	error?: string | Error
 	details?: E
 }
 
@@ -23,9 +29,9 @@ export const success = <T>(data: T, message?: string): Success<T> => ({
 })
 
 type FailureProps<E> = {
-	type: AppErrorType
+	type: (typeof errorType)[number]
 	message: string
-	error?: string
+	error?: string | Error
 	details?: E
 }
 

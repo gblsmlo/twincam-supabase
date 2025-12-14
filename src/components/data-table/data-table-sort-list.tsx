@@ -1,7 +1,6 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
 	Command,
 	CommandEmpty,
@@ -25,9 +24,10 @@ import {
 	SortableItemHandle,
 	SortableOverlay,
 } from '@/components/ui/sortable'
+import { dataTableConfig } from '@/config/data-table'
 import { cn } from '@/lib/utils'
-import { dataTableConfig } from '@/shared/config/data-table'
 import type { ColumnSort, SortDirection, Table } from '@tanstack/react-table'
+import { Button } from '@tc96/ui-react'
 import { ArrowDownUp, ChevronsUpDown, GripVertical, Trash2 } from 'lucide-react'
 import * as React from 'react'
 
@@ -36,9 +36,14 @@ const REMOVE_SORT_SHORTCUTS = ['backspace', 'delete']
 
 interface DataTableSortListProps<TData> extends React.ComponentProps<typeof PopoverContent> {
 	table: Table<TData>
+	disabled?: boolean
 }
 
-export function DataTableSortList<TData>({ table, ...props }: DataTableSortListProps<TData>) {
+export function DataTableSortList<TData>({
+	table,
+	disabled,
+	...props
+}: DataTableSortListProps<TData>) {
 	const id = React.useId()
 	const labelId = React.useId()
 	const descriptionId = React.useId()
@@ -137,7 +142,13 @@ export function DataTableSortList<TData>({ table, ...props }: DataTableSortListP
 		<Sortable getItemValue={(item) => item.id} onValueChange={onSortingChange} value={sorting}>
 			<Popover onOpenChange={setOpen} open={open}>
 				<PopoverTrigger asChild>
-					<Button className="font-normal" onKeyDown={onTriggerKeyDown} size="sm" variant="outline">
+					<Button
+						className="font-normal"
+						disabled={disabled}
+						onKeyDown={onTriggerKeyDown}
+						size="sm"
+						variant="outline"
+					>
 						<ArrowDownUp className="text-muted-foreground" />
 						Sort
 						{sorting.length > 0 && (
@@ -171,7 +182,7 @@ export function DataTableSortList<TData>({ table, ...props }: DataTableSortListP
 					</div>
 					{sorting.length > 0 && (
 						<SortableContent asChild>
-							<ul className="flex max-h-[300px] flex-col gap-2 overflow-y-auto p-1">
+							<div className="flex max-h-[300px] flex-col gap-2 overflow-y-auto p-1" role="list">
 								{sorting.map((sort) => (
 									<DataTableSortItem
 										columnLabels={columnLabels}
@@ -183,12 +194,11 @@ export function DataTableSortList<TData>({ table, ...props }: DataTableSortListP
 										sortItemId={`${id}-sort-${sort.id}`}
 									/>
 								))}
-							</ul>
+							</div>
 						</SortableContent>
 					)}
 					<div className="flex w-full items-center gap-2">
 						<Button
-							className="rounded"
 							disabled={columns.length === 0}
 							onClick={onSortAdd}
 							ref={addButtonRef}
@@ -197,7 +207,7 @@ export function DataTableSortList<TData>({ table, ...props }: DataTableSortListP
 							Add sort
 						</Button>
 						{sorting.length > 0 && (
-							<Button className="rounded" onClick={onSortingReset} size="sm" variant="outline">
+							<Button onClick={onSortingReset} size="sm" variant="outline">
 								Reset sorting
 							</Button>
 						)}
@@ -241,7 +251,7 @@ function DataTableSortItem({
 	const [showDirectionSelector, setShowDirectionSelector] = React.useState(false)
 
 	const onItemKeyDown = React.useCallback(
-		(event: React.KeyboardEvent<HTMLLIElement>) => {
+		(event: React.KeyboardEvent<HTMLDivElement>) => {
 			if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
 				return
 			}
@@ -260,10 +270,11 @@ function DataTableSortItem({
 
 	return (
 		<SortableItem asChild value={sort.id}>
-			<li
+			<div
 				className="flex items-center gap-2"
 				id={sortItemId}
 				onKeyDown={onItemKeyDown}
+				role="listitem"
 				tabIndex={-1}
 			>
 				<Popover onOpenChange={setShowFieldSelector} open={showFieldSelector}>
@@ -321,18 +332,18 @@ function DataTableSortItem({
 				<Button
 					aria-controls={sortItemId}
 					className="size-8 shrink-0 rounded"
+					isIcon={true}
 					onClick={() => onSortRemove(sort.id)}
-					size="icon"
 					variant="outline"
 				>
 					<Trash2 />
 				</Button>
 				<SortableItemHandle asChild>
-					<Button className="size-8 shrink-0 rounded" size="icon" variant="outline">
+					<Button className="size-8 shrink-0 rounded" isIcon={true} variant="outline">
 						<GripVertical />
 					</Button>
 				</SortableItemHandle>
-			</li>
+			</div>
 		</SortableItem>
 	)
 }

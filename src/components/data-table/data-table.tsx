@@ -1,3 +1,5 @@
+'use client'
+
 import { DataTablePagination } from '@/components/data-table/data-table-pagination'
 import {
 	Table,
@@ -7,8 +9,8 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
+import { getCommonPinningStyles } from '@/lib/data-table'
 import { cn } from '@/lib/utils'
-import { getCommonPinningStyles } from '@lib/data-table'
 import { flexRender, type Table as TanstackTable } from '@tanstack/react-table'
 import type * as React from 'react'
 
@@ -24,6 +26,8 @@ export function DataTable<TData>({
 	className,
 	...props
 }: DataTableProps<TData>) {
+	'use no memo'
+
 	return (
 		<div className={cn('flex w-full flex-col gap-2.5 overflow-auto', className)} {...props}>
 			{children}

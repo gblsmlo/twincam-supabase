@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import {
 	Command,
 	CommandEmpty,
@@ -12,15 +11,20 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import type { Table } from '@tanstack/react-table'
+import { Button } from '@tc96/ui-react'
 import { Check, Settings2 } from 'lucide-react'
-import type { ComponentProps } from 'react'
 import * as React from 'react'
 
-interface DataTableViewOptionsProps<TData> extends ComponentProps<typeof PopoverContent> {
+interface DataTableViewOptionsProps<TData> extends React.ComponentProps<typeof PopoverContent> {
 	table: Table<TData>
+	disabled?: boolean
 }
 
-export function DataTableViewOptions<TData>({ table, ...props }: DataTableViewOptionsProps<TData>) {
+export function DataTableViewOptions<TData>({
+	table,
+	disabled,
+	...props
+}: DataTableViewOptionsProps<TData>) {
 	const columns = React.useMemo(
 		() =>
 			table
@@ -34,10 +38,10 @@ export function DataTableViewOptions<TData>({ table, ...props }: DataTableViewOp
 			<PopoverTrigger asChild>
 				<Button
 					aria-label="Toggle columns"
-					className="ml-auto hidden h-8 font-normal lg:flex"
+					disabled={disabled}
 					role="combobox"
 					size="sm"
-					variant="outline"
+					variant="ghost"
 				>
 					<Settings2 className="text-muted-foreground" />
 					View

@@ -8,7 +8,7 @@ const jiti = createJiti(fileURLToPath(import.meta.url))
 jiti('./src/infra/env/index')
 
 const nextConfig: NextConfig = {
-	reactCompiler: true,
+	reactCompiler: false,
 	transpilePackages: ['@t3-oss/env-nextjs', '@t3-oss/env-core'],
 }
 

@@ -1,7 +1,7 @@
 'use server'
 
 import { type Result, success } from '@/shared/errors'
-import { sleep } from '@/utils/sleep'
+import { sleep } from '@/shared/utils/sleep'
 import type { RecoveryPasswordFormData } from '../schemas'
 
 export async function recoveryPasswordAction(

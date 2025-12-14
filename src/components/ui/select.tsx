@@ -46,7 +46,7 @@ function SelectTrigger({
 function SelectContent({
 	className,
 	children,
-	position = 'popper',
+	position = 'item-aligned',
 	align = 'center',
 	...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
@@ -104,7 +104,10 @@ function SelectItem({
 			data-slot="select-item"
 			{...props}
 		>
-			<span className="absolute right-2 flex size-3.5 items-center justify-center">
+			<span
+				className="absolute right-2 flex size-3.5 items-center justify-center"
+				data-slot="select-item-indicator"
+			>
 				<SelectPrimitive.ItemIndicator>
 					<CheckIcon className="size-4" />
 				</SelectPrimitive.ItemIndicator>

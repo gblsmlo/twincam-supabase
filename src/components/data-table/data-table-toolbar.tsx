@@ -4,14 +4,13 @@ import { DataTableDateFilter } from '@/components/data-table/data-table-date-fil
 import { DataTableFacetedFilter } from '@/components/data-table/data-table-faceted-filter'
 import { DataTableSliderFilter } from '@/components/data-table/data-table-slider-filter'
 import { DataTableViewOptions } from '@/components/data-table/data-table-view-options'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import type { Column, Table } from '@tanstack/react-table'
+import { Button, Input } from '@tc96/ui-react'
 import { X } from 'lucide-react'
-import { type ComponentProps, useCallback, useMemo } from 'react'
+import * as React from 'react'
 
-interface DataTableToolbarProps<TData> extends ComponentProps<'div'> {
+interface DataTableToolbarProps<TData> extends React.ComponentProps<'div'> {
 	table: Table<TData>
 }
 
@@ -23,12 +22,12 @@ export function DataTableToolbar<TData>({
 }: DataTableToolbarProps<TData>) {
 	const isFiltered = table.getState().columnFilters.length > 0
 
-	const columns = useMemo(
+	const columns = React.useMemo(
 		() => table.getAllColumns().filter((column) => column.getCanFilter()),
 		[table],
 	)
 
-	const onReset = useCallback(() => {
+	const onReset = React.useCallback(() => {
 		table.resetColumnFilters()
 	}, [table])
 
@@ -44,21 +43,15 @@ export function DataTableToolbar<TData>({
 					<DataTableToolbarFilter column={column} key={column.id} />
 				))}
 				{isFiltered && (
-					<Button
-						aria-label="Reset filters"
-						className="border-dashed"
-						onClick={onReset}
-						size="sm"
-						variant="outline"
-					>
+					<Button aria-label="Reset filters" onClick={onReset} size="sm" variant="outline">
 						<X />
 						Reset
 					</Button>
 				)}
 			</div>
-			<div className="flex items-center gap-2">
-				{children}
+			<div className="flex items-center gap-3">
 				<DataTableViewOptions align="end" table={table} />
+				{children}
 			</div>
 		</div>
 	)
@@ -71,16 +64,17 @@ function DataTableToolbarFilter<TData>({ column }: DataTableToolbarFilterProps<T
 	{
 		const columnMeta = column.columnDef.meta
 
-		const onFilterRender = useCallback(() => {
+		const onFilterRender = React.useCallback(() => {
 			if (!columnMeta?.variant) return null
 
 			switch (columnMeta.variant) {
 				case 'text':
 					return (
 						<Input
-							className="h-8 w-40 lg:w-56"
+							className="w-40 lg:w-64"
 							onChange={(event) => column.setFilterValue(event.target.value)}
 							placeholder={columnMeta.placeholder ?? columnMeta.label}
+							size="sm"
 							value={(column.getFilterValue() as string) ?? ''}
 						/>
 					)

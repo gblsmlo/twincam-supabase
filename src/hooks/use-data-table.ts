@@ -1,8 +1,8 @@
 'use client'
 
+import { useDebouncedCallback } from '@/hooks/use-debounced-callback'
+import { getSortingStateParser } from '@/lib/parsers'
 import type { ExtendedColumnSort, QueryKeys } from '@/types/data-table'
-import { useDebouncedCallback } from '@hooks/use-debounced-callback'
-import { getSortingStateParser } from '@lib/parsers'
 import {
 	type ColumnFiltersState,
 	getCoreRowModel,

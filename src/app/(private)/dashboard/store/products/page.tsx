@@ -1,6 +1,6 @@
 import { MainContent } from '@/components/ui/main-content'
 import { PageDescription, PageHeader, PageTitle } from '@/components/ui/page-header'
-import { DataTableProduct } from '@/modules/product/components/data-table-product'
+import { ProductsView } from '@/modules/product/components/products-view'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 	title: 'Products',
 }
 
-export default function Page() {
+export default async function Page() {
 	const title = String(metadata.title)
 	const description = String(metadata.description)
 
@@ -18,9 +18,7 @@ export default function Page() {
 				<PageTitle>{title}</PageTitle>
 				<PageDescription>{description}</PageDescription>
 			</PageHeader>
-			<div>
-				<DataTableProduct />
-			</div>
+			<ProductsView />
 		</MainContent>
 	)
 }

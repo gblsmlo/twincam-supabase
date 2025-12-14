@@ -1,11 +1,11 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
-import { formatDate } from '@lib/format'
+import { formatDate } from '@/lib/format'
 import type { Column } from '@tanstack/react-table'
+import { Button } from '@tc96/ui-react'
 import { CalendarIcon, XCircle } from 'lucide-react'
 import * as React from 'react'
 import type { DateRange } from 'react-day-picker'
@@ -162,9 +162,9 @@ export function DataTableDateFilter<TData>({
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
-				<Button className="border-dashed font-normal" size="sm" variant="outline">
+				<Button size="sm" variant="outline">
 					{hasValue ? (
-						<Button
+						<div
 							aria-label={`Clear ${title} filter`}
 							className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 							onClick={onReset}
@@ -172,7 +172,7 @@ export function DataTableDateFilter<TData>({
 							tabIndex={0}
 						>
 							<XCircle />
-						</Button>
+						</div>
 					) : (
 						<CalendarIcon />
 					)}

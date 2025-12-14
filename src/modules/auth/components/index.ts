@@ -1,5 +1,4 @@
-export * from './auth-guard-privated'
-export * from './auth-guard-public'
+export * from './auth-guard'
 export * from './auth-layout'
 export * from './recovery-password-view'
 export * from './sign-in-view'

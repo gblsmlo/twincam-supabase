@@ -1,4 +1,4 @@
-import { dataTableConfig } from '@/shared/config/data-table'
+import { dataTableConfig } from '@/config/data-table'
 import type { ExtendedColumnFilter, FilterOperator, FilterVariant } from '@/types/data-table'
 import type { Column } from '@tanstack/react-table'
 
@@ -14,7 +14,7 @@ export function getCommonPinningStyles<TData>({
 	const isFirstRightPinnedColumn = isPinned === 'right' && column.getIsFirstColumn('right')
 
 	return {
-		background: isPinned ? 'var(--background)' : 'var(--background)',
+		background: isPinned ? 'var(--color-stone-950)' : 'var(--color-stone-900)',
 		boxShadow: withBorder
 			? isLastLeftPinnedColumn
 				? '-4px 0 4px -4px var(--border) inset'
@@ -22,8 +22,10 @@ export function getCommonPinningStyles<TData>({
 					? '4px 0 4px -4px var(--border) inset'
 					: undefined
 			: undefined,
+		height: '44px',
 		left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
-		opacity: isPinned ? 0.97 : 1,
+		opacity: isPinned ? 0.95 : 1,
+		padding: '4px 20px',
 		position: isPinned ? 'sticky' : 'relative',
 		right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
 		width: column.getSize(),

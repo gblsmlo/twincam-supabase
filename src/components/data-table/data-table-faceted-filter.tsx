@@ -1,5 +1,6 @@
 'use client'
 
+import type { Option } from '@/components/data-table/data-table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,10 +15,9 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import type { Option } from '@/types/data-table'
 import type { Column } from '@tanstack/react-table'
 import { Check, PlusCircle, XCircle } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import * as React from 'react'
 
 interface DataTableFacetedFilterProps<TData, TValue> {
 	column?: Column<TData, TValue>
@@ -32,12 +32,12 @@ export function DataTableFacetedFilter<TData, TValue>({
 	options,
 	multiple,
 }: DataTableFacetedFilterProps<TData, TValue>) {
-	const [open, setOpen] = useState(false)
+	const [open, setOpen] = React.useState(false)
 
 	const columnFilterValue = column?.getFilterValue()
 	const selectedValues = new Set(Array.isArray(columnFilterValue) ? columnFilterValue : [])
 
-	const onItemSelect = useCallback(
+	const onItemSelect = React.useCallback(
 		(option: Option, isSelected: boolean) => {
 			if (!column) return
 
@@ -58,8 +58,8 @@ export function DataTableFacetedFilter<TData, TValue>({
 		[column, multiple, selectedValues],
 	)
 
-	const onReset = useCallback(
-		(event?: MouseEvent) => {
+	const onReset = React.useCallback(
+		(event?: React.MouseEvent) => {
 			event?.stopPropagation()
 			column?.setFilterValue(undefined)
 		},

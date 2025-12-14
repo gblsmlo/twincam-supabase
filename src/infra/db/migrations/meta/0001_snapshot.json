@@ -1,0 +1,206 @@
+{
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	},
+	"dialect": "postgresql",
+	"enums": {},
+	"id": "65038bb1-3e26-434f-b62c-83823929bce6",
+	"policies": {},
+	"prevId": "16694395-12f6-470d-a4c2-fcc7d4df460a",
+	"roles": {},
+	"schemas": {},
+	"sequences": {},
+	"tables": {
+		"public.members": {
+			"checkConstraints": {},
+			"columns": {
+				"id": {
+					"name": "id",
+					"notNull": true,
+					"primaryKey": true,
+					"type": "uuid"
+				},
+				"role": {
+					"default": "'member'",
+					"name": "role",
+					"notNull": true,
+					"primaryKey": false,
+					"type": "text"
+				},
+				"spaceId": {
+					"name": "spaceId",
+					"notNull": true,
+					"primaryKey": false,
+					"type": "uuid"
+				},
+				"userId": {
+					"name": "userId",
+					"notNull": true,
+					"primaryKey": false,
+					"type": "uuid"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"foreignKeys": {
+				"members_spaceId_spaces_id_fk": {
+					"columnsFrom": ["spaceId"],
+					"columnsTo": ["id"],
+					"name": "members_spaceId_spaces_id_fk",
+					"onDelete": "cascade",
+					"onUpdate": "no action",
+					"tableFrom": "members",
+					"tableTo": "spaces"
+				},
+				"members_userId_users_id_fk": {
+					"columnsFrom": ["userId"],
+					"columnsTo": ["id"],
+					"name": "members_userId_users_id_fk",
+					"onDelete": "cascade",
+					"onUpdate": "no action",
+					"schemaTo": "auth",
+					"tableFrom": "members",
+					"tableTo": "users"
+				}
+			},
+			"indexes": {},
+			"isRLSEnabled": false,
+			"name": "members",
+			"policies": {},
+			"schema": "",
+			"uniqueConstraints": {}
+		},
+		"public.projects": {
+			"checkConstraints": {},
+			"columns": {
+				"description": {
+					"name": "description",
+					"notNull": false,
+					"primaryKey": false,
+					"type": "text"
+				},
+				"id": {
+					"name": "id",
+					"notNull": true,
+					"primaryKey": true,
+					"type": "uuid"
+				},
+				"name": {
+					"name": "name",
+					"notNull": true,
+					"primaryKey": false,
+					"type": "text"
+				},
+				"ownerId": {
+					"name": "ownerId",
+					"notNull": true,
+					"primaryKey": false,
+					"type": "uuid"
+				},
+				"slug": {
+					"name": "slug",
+					"notNull": true,
+					"primaryKey": false,
+					"type": "text"
+				},
+				"spaceId": {
+					"name": "spaceId",
+					"notNull": true,
+					"primaryKey": false,
+					"type": "uuid"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"foreignKeys": {
+				"projects_ownerId_users_id_fk": {
+					"columnsFrom": ["ownerId"],
+					"columnsTo": ["id"],
+					"name": "projects_ownerId_users_id_fk",
+					"onDelete": "cascade",
+					"onUpdate": "no action",
+					"schemaTo": "auth",
+					"tableFrom": "projects",
+					"tableTo": "users"
+				},
+				"projects_spaceId_spaces_id_fk": {
+					"columnsFrom": ["spaceId"],
+					"columnsTo": ["id"],
+					"name": "projects_spaceId_spaces_id_fk",
+					"onDelete": "cascade",
+					"onUpdate": "no action",
+					"tableFrom": "projects",
+					"tableTo": "spaces"
+				}
+			},
+			"indexes": {},
+			"isRLSEnabled": false,
+			"name": "projects",
+			"policies": {},
+			"schema": "",
+			"uniqueConstraints": {
+				"projects_slug_unique": {
+					"columns": ["slug"],
+					"name": "projects_slug_unique",
+					"nullsNotDistinct": false
+				}
+			}
+		},
+		"public.spaces": {
+			"checkConstraints": {},
+			"columns": {
+				"description": {
+					"name": "description",
+					"notNull": false,
+					"primaryKey": false,
+					"type": "text"
+				},
+				"id": {
+					"name": "id",
+					"notNull": true,
+					"primaryKey": true,
+					"type": "uuid"
+				},
+				"name": {
+					"name": "name",
+					"notNull": true,
+					"primaryKey": false,
+					"type": "text"
+				},
+				"ownerId": {
+					"name": "ownerId",
+					"notNull": true,
+					"primaryKey": false,
+					"type": "uuid"
+				},
+				"slug": {
+					"name": "slug",
+					"notNull": true,
+					"primaryKey": false,
+					"type": "text"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"foreignKeys": {
+				"spaces_ownerId_users_id_fk": {
+					"columnsFrom": ["ownerId"],
+					"columnsTo": ["id"],
+					"name": "spaces_ownerId_users_id_fk",
+					"onDelete": "cascade",
+					"onUpdate": "no action",
+					"schemaTo": "auth",
+					"tableFrom": "spaces",
+					"tableTo": "users"
+				}
+			},
+			"indexes": {},
+			"isRLSEnabled": false,
+			"name": "spaces",
+			"policies": {},
+			"schema": "",
+			"uniqueConstraints": {}
+		}
+	},
+	"version": "7",
+	"views": {}
+}

@@ -5,6 +5,7 @@ export default defineConfig({
   out: './src/infra/db/migrations',
   schema: './src/infra/db/schemas.ts',
   dialect: 'postgresql',
+  schemaFilter: ["public"],
   dbCredentials: {
     url: env.DATABASE_URL,
   },

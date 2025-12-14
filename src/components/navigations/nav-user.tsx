@@ -15,65 +15,38 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '@/components/ui/sidebar'
-import { signOut, useSession } from '@/infra/auth/client'
+import { useAuth } from '@/modules/auth'
 import { type Route, userRoutes } from '@/shared/config/routes'
-import { toSlug } from '@/utils/to-slug'
-import { IconDotsVertical, IconLogout } from '@tabler/icons-react'
+import { toSlug } from '@/shared/utils/to-slug'
+import { Dot, LogOutIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { type ComponentProps, useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { type ComponentProps, useCallback, useMemo } from 'react'
 import { NavUserAvatar } from './nav-user-avatar'
 
 type NavUserProps = ComponentProps<'ul'> & {
 	items: Route[]
-	user: {
-		name: string
-		email: string
-		avatar: string
-	}
-}
-
-type User = {
-	name: string
-	email?: string
-	image?: string | null
 }
 
 export function NavUser({ items, ...props }: NavUserProps) {
-	const [user, setUser] = useState<User | null>()
 	const { isMobile } = useSidebar()
-	const { data: session } = useSession()
+
 	const router = useRouter()
+	const { user, signOut } = useAuth()
 
-	useEffect(() => {
-		if (!session?.user) {
-			setUser(null)
-			return
-		}
+	const handleSignOut = useCallback(async () => {
+		await signOut()
+	}, [signOut])
 
-		setUser({
-			email: session.user.email,
-			image: session.user.image,
-			name: session.user.name,
-		})
-	}, [session?.user])
+	const handleNavigate = useCallback(
+		(link: string) => {
+			router.push(link)
+		},
+		[router],
+	)
 
-	const handleSignOut = async () => {
-		await signOut({
-			fetchOptions: {
-				onError: () => {
-					toast.error('Ocorreu um erro ao sair. Tente novamente.')
-				},
-				onSuccess: () => {
-					router.push('/auth/login')
-				},
-			},
-		})
-	}
+	const cachedUser = useMemo(() => user, [user])
 
-	if (!user) {
-		return null
-	}
+	if (!cachedUser) return null
 
 	return (
 		<SidebarMenu {...props}>
@@ -84,13 +57,13 @@ export function NavUser({ items, ...props }: NavUserProps) {
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 							size="lg"
 						>
-							<NavUserAvatar image={user?.image} name={user.name} />
+							<NavUserAvatar name={cachedUser.name} />
 
 							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-medium">{user.name}</span>
-								<span className="truncate text-muted-foreground text-xs">{user.email}</span>
+								<span className="truncate font-medium">{cachedUser.name}</span>
+								<span className="truncate text-muted-foreground text-xs">{cachedUser.email}</span>
 							</div>
-							<IconDotsVertical className="ml-auto size-4" />
+							<Dot className="ml-auto size-4" />
 						</SidebarMenuButton>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
@@ -101,11 +74,11 @@ export function NavUser({ items, ...props }: NavUserProps) {
 					>
 						<DropdownMenuLabel className="p-0 font-normal">
 							<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-								<NavUserAvatar image={user?.image} name={user.name} />
+								<NavUserAvatar name={cachedUser.name} />
 
 								<div className="grid flex-1 text-left text-sm leading-tight">
-									<span className="truncate font-medium">{user.name}</span>
-									<span className="truncate text-muted-foreground text-xs">{user.email}</span>
+									<span className="truncate font-medium">{cachedUser.name}</span>
+									<span className="truncate text-muted-foreground text-xs">{cachedUser.email}</span>
 								</div>
 							</div>
 						</DropdownMenuLabel>
@@ -115,7 +88,7 @@ export function NavUser({ items, ...props }: NavUserProps) {
 								return (
 									<DropdownMenuItem
 										key={toSlug(route.label)}
-										onClick={() => router.push(route.link)}
+										onClick={() => handleNavigate(route.link)}
 									>
 										{route.label}
 									</DropdownMenuItem>
@@ -124,7 +97,7 @@ export function NavUser({ items, ...props }: NavUserProps) {
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem onClick={handleSignOut}>
-							<IconLogout />
+							<LogOutIcon />
 							Log out
 						</DropdownMenuItem>
 					</DropdownMenuContent>

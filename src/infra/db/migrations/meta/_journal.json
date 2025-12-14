@@ -1,0 +1,41 @@
+{
+	"dialect": "postgresql",
+	"entries": [
+		{
+			"breakpoints": true,
+			"idx": 0,
+			"tag": "0000_tidy_thor",
+			"version": "7",
+			"when": 1765312103625
+		},
+		{
+			"breakpoints": true,
+			"idx": 1,
+			"tag": "0001_free_marrow",
+			"version": "7",
+			"when": 1765312460596
+		},
+		{
+			"breakpoints": true,
+			"idx": 2,
+			"tag": "0002_grey_lucky_pierre",
+			"version": "7",
+			"when": 1765323142471
+		},
+		{
+			"breakpoints": true,
+			"idx": 3,
+			"tag": "0003_rare_night_thrasher",
+			"version": "7",
+			"when": 1765326870388
+		},
+		{
+			"breakpoints": true,
+			"idx": 4,
+			"tag": "0004_sturdy_ricochet",
+			"version": "7",
+			"when": 1765329581035
+		}
+	],
+	"version": "7"
+}

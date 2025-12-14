@@ -1,6 +1,6 @@
 'use client'
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertTitle } from '@/components/ui/alert'
 import { Anchor } from '@/components/ui/anchor'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,7 +12,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Spinner } from '@/components/ui/spiner'
+// import { Spinner } from '@/components/ui/spiner'
 import { isFailure, isSuccess } from '@/shared/errors/result'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
@@ -23,10 +23,12 @@ import { toast } from 'sonner'
 import { signInAction } from '../actions'
 import { GoogleProviderButton } from '../components/google-provider-button'
 import { ProviderSeparetor } from '../components/separetor'
+import { useAuth } from '../hooks/use-auth'
 import { type SignInFormData, signInSchema } from '../schemas'
 
 export function SignInForm() {
 	const [isPending, startTransition] = useTransition()
+	const { refresh } = useAuth()
 
 	const form = useForm<SignInFormData>({
 		defaultValues: {
@@ -49,8 +51,9 @@ export function SignInForm() {
 			}
 
 			if (isSuccess(result)) {
-				toast.success('Login realizado com sucesso!')
+				await refresh()
 
+				toast.success('Login realizado com sucesso!')
 				redirect(result.data.redirectTo)
 			}
 		})
