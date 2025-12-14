@@ -4,7 +4,6 @@ import { DataTableDateFilter } from '@/components/data-table/data-table-date-fil
 import { DataTableFacetedFilter } from '@/components/data-table/data-table-faceted-filter'
 import { DataTableSliderFilter } from '@/components/data-table/data-table-slider-filter'
 import { DataTableViewOptions } from '@/components/data-table/data-table-view-options'
-// import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import type { Column, Table } from '@tanstack/react-table'
 import { Button, Input } from '@tc96/ui-react'
@@ -50,9 +49,9 @@ export function DataTableToolbar<TData>({
 					</Button>
 				)}
 			</div>
-			<div className="flex items-center gap-2">
-				{children}
+			<div className="flex items-center gap-3">
 				<DataTableViewOptions align="end" table={table} />
+				{children}
 			</div>
 		</div>
 	)

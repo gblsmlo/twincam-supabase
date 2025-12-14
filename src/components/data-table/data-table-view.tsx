@@ -1,22 +1,24 @@
 'use client'
 
 import { DataTable } from '@/components/data-table/data-table'
-import { DataTableSortList } from '@/components/data-table/data-table-sort-list'
 import { DataTableToolbar } from '@/components/data-table/data-table-toolbar'
 import { useDataTable } from '@/hooks/use-data-table'
 import type { ColumnDef } from '@tanstack/react-table'
+import { Button } from '@tc96/ui-react'
 
 interface DataTableViewProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
 	data: TData[]
 	pageCount?: number
 	getRowId?: (row: TData) => string
+	onCreateNew: () => void
 }
 
 export function DataTableView<TData, TValue>({
 	columns,
 	data,
 	pageCount = 1,
+	onCreateNew,
 	getRowId,
 }: DataTableViewProps<TData, TValue>) {
 	const { table } = useDataTable({
@@ -26,10 +28,16 @@ export function DataTableView<TData, TValue>({
 		pageCount,
 	})
 
+	function handleCreateNew() {
+		onCreateNew()
+	}
+
 	return (
 		<DataTable table={table}>
 			<DataTableToolbar table={table}>
-				<DataTableSortList table={table} />
+				<Button onClick={handleCreateNew} size="sm">
+					Add New
+				</Button>
 			</DataTableToolbar>
 		</DataTable>
 	)

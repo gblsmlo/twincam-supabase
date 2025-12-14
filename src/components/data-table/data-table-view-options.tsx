@@ -41,7 +41,7 @@ export function DataTableViewOptions<TData>({
 					disabled={disabled}
 					role="combobox"
 					size="sm"
-					variant="outline"
+					variant="ghost"
 				>
 					<Settings2 className="text-muted-foreground" />
 					View
