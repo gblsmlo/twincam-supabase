@@ -1,7 +1,6 @@
 import { MainContent } from '@/components/ui/main-content'
 import { PageDescription, PageHeader, PageTitle } from '@/components/ui/page-header'
-import { findProductAction } from '@/modules/product/actions/find-product-action'
-import { DataTableProduct } from '@/modules/product/components/data-table-product'
+import { DataTableProducts } from '@/modules/product'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -13,10 +12,6 @@ export default async function Page() {
 	const title = String(metadata.title)
 	const description = String(metadata.description)
 
-	const products = await findProductAction()
-
-	console.log(products)
-
 	return (
 		<MainContent size="2xl">
 			<PageHeader>
@@ -24,9 +19,7 @@ export default async function Page() {
 				<PageDescription>{description}</PageDescription>
 			</PageHeader>
 
-			<div>
-				<DataTableProduct />
-			</div>
+			<DataTableProducts />
 		</MainContent>
 	)
 }
