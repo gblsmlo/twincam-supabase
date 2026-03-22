@@ -2,7 +2,7 @@
 
 **Severity:** HIGH
 **Category:** Data Privacy | Context Boundary Violation
-**Status:** Open
+**Status:** Done
 **Linear:** [PRD-32](https://linear.app/studio-risine/issue/PRD-32/ddd-001-product-context-missing-tenant-isolation)
 
 ## Problem
