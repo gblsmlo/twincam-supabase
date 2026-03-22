@@ -1,5 +1,6 @@
 import { index, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core'
 import { auditFields } from '../helpers'
+import { memberRoleEnum } from './member'
 import { spacesTable } from './space'
 
 export const memberInvitationsTable = pgTable(
@@ -12,7 +13,7 @@ export const memberInvitationsTable = pgTable(
 		organizationId: uuid('organization_id')
 			.notNull()
 			.references(() => spacesTable._id, { onDelete: 'cascade' }),
-		role: text().notNull().default('member'),
+		role: memberRoleEnum('role').notNull().default('MEMBER'),
 		spaceId: uuid('space_id')
 			.notNull()
 			.references(() => spacesTable._id, { onDelete: 'cascade' }),

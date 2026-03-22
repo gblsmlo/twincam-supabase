@@ -4,6 +4,7 @@ import type {
 	memberInvitationCreateSchema,
 	memberInvitationSelectSchema,
 	memberInvitationUpdateSchema,
+	memberRoleType,
 	memberSelectSchema,
 	memberUpdateSchema,
 } from './schemas'
@@ -16,4 +17,4 @@ export type MemberInvitation = z.infer<typeof memberInvitationSelectSchema>
 export type MemberInvitationInsert = z.infer<typeof memberInvitationCreateSchema>
 export type MemberInvitationUpdate = z.infer<typeof memberInvitationUpdateSchema>
 
-export type MemberRole = 'owner' | 'admin' | 'member'
+export type MemberRoleType = z.infer<typeof memberRoleType>
