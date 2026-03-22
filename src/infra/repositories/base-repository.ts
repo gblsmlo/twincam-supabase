@@ -9,6 +9,10 @@ export abstract class BaseRepository {
 	protected readonly db: Database
 
 	constructor(organizationId: string, db: Database) {
+		if (!organizationId) {
+			throw new Error('Organization ID is required for repository')
+		}
+
 		this.organizationId = organizationId
 		this.db = db
 	}
