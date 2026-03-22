@@ -68,5 +68,5 @@ export class ProductDrizzleRepository extends BaseRepository implements ProductR
 	}
 }
 
-export const productRepository = (organizationId: string) =>
+export const productRepository = (organizationId = '') =>
 	new ProductDrizzleRepository(organizationId, db)

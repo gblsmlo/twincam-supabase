@@ -23,12 +23,14 @@ function createMember(overrides: Partial<Member> & { _id: string; role: string }
 }
 
 function createInvitation(overrides: Partial<MemberInvitation> = {}): MemberInvitation {
+	const EXPIRES_AT = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
 	return {
 		_id: INVITATION_ID,
 		acceptedAt: null,
 		createdAt: new Date(),
 		email: 'invitee@test.com',
-		expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+		expiresAt: EXPIRES_AT,
 		organizationId: ORG_ID,
 		role: 'member',
 		spaceId: SPACE_ID,
@@ -100,7 +102,12 @@ describe('MemberInvitationService', () => {
 		it('should create invitation with 7-day expiry when owner invites', async () => {
 			const before = Date.now()
 
-			const result = await service.invite(OWNER_USER_ID, SPACE_ID, 'new@test.com', 'member')
+			const result = await service.invite({
+				actorUserId: OWNER_USER_ID,
+				email: 'new@test.com',
+				role: 'member',
+				spaceId: SPACE_ID,
+			})
 
 			const after = Date.now()
 
@@ -121,7 +128,12 @@ describe('MemberInvitationService', () => {
 		})
 
 		it('should reject invalid email', async () => {
-			const result = await service.invite(OWNER_USER_ID, SPACE_ID, 'invalid', 'member')
+			const result = await service.invite({
+				actorUserId: OWNER_USER_ID,
+				email: 'invalid',
+				role: 'member',
+				spaceId: SPACE_ID,
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -131,7 +143,12 @@ describe('MemberInvitationService', () => {
 		})
 
 		it('should reject when actor lacks permission', async () => {
-			const result = await service.invite(MEMBER_USER_ID, SPACE_ID, 'new@test.com', 'member')
+			const result = await service.invite({
+				actorUserId: MEMBER_USER_ID,
+				email: 'new@test.com',
+				role: 'member',
+				spaceId: SPACE_ID,
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -142,7 +159,12 @@ describe('MemberInvitationService', () => {
 		it('should reject duplicate invitation', async () => {
 			invitationRepo.findBySpaceIdAndEmail.mockResolvedValue(createInvitation())
 
-			const result = await service.invite(OWNER_USER_ID, SPACE_ID, 'invitee@test.com', 'member')
+			const result = await service.invite({
+				actorUserId: OWNER_USER_ID,
+				email: 'invitee@test.com',
+				role: 'member',
+				spaceId: SPACE_ID,
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -157,7 +179,10 @@ describe('MemberInvitationService', () => {
 			const invitation = createInvitation()
 			invitationRepo.findById.mockResolvedValue(invitation)
 
-			const result = await service.accept(INVITATION_ID, ACCEPTING_USER_ID)
+			const result = await service.accept({
+				invitationId: INVITATION_ID,
+				userId: ACCEPTING_USER_ID,
+			})
 
 			expect(result.success).toBe(true)
 			if (result.success) {
@@ -180,7 +205,10 @@ describe('MemberInvitationService', () => {
 			})
 			invitationRepo.findById.mockResolvedValue(expiredInvitation)
 
-			const result = await service.accept(INVITATION_ID, ACCEPTING_USER_ID)
+			const result = await service.accept({
+				invitationId: INVITATION_ID,
+				userId: ACCEPTING_USER_ID,
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -195,7 +223,10 @@ describe('MemberInvitationService', () => {
 			})
 			invitationRepo.findById.mockResolvedValue(acceptedInvitation)
 
-			const result = await service.accept(INVITATION_ID, ACCEPTING_USER_ID)
+			const result = await service.accept({
+				invitationId: INVITATION_ID,
+				userId: ACCEPTING_USER_ID,
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -207,7 +238,10 @@ describe('MemberInvitationService', () => {
 		it('should reject when invitation not found', async () => {
 			invitationRepo.findById.mockResolvedValue(null)
 
-			const result = await service.accept('non-existent', ACCEPTING_USER_ID)
+			const result = await service.accept({
+				invitationId: 'non-existent',
+				userId: ACCEPTING_USER_ID,
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -220,7 +254,7 @@ describe('MemberInvitationService', () => {
 			invitationRepo.findById.mockResolvedValue(invitation)
 			memberRepo.findByUserIdAndSpaceId.mockResolvedValue(regularMember)
 
-			const result = await service.accept(INVITATION_ID, MEMBER_USER_ID)
+			const result = await service.accept({ invitationId: INVITATION_ID, userId: MEMBER_USER_ID })
 
 			expect(result.success).toBe(false)
 			if (!result.success) {

@@ -23,7 +23,7 @@ export async function makeSupabaseSession(): Promise<Result<MakeSupabaseSessionO
 
 	if (error) {
 		return failure({
-			error: error,
+			error: error.message,
 			message: 'Error fetching session',
 			type: 'AUTHORIZATION_ERROR',
 		})

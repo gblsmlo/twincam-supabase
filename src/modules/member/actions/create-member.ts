@@ -35,7 +35,12 @@ export const createMemberAction = async (
 	const repo = memberRepository(input.organizationId)
 	const service = new MemberRoleService(repo)
 
-	const result = await service.addMember(user.id, input.spaceId, input.targetUserId, input.role)
+	const result = await service.addMember({
+		actorUserId: user.id,
+		role: input.role,
+		spaceId: input.spaceId,
+		targetUserId: input.targetUserId,
+	})
 
 	if (!result.success) {
 		return result

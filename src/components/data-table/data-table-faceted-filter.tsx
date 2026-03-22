@@ -1,6 +1,5 @@
 'use client'
 
-import type { Option } from '@/components/data-table/data-table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,6 +14,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import type { Option } from '@/types/data-table'
 import type { Column } from '@tanstack/react-table'
 import { Check, PlusCircle, XCircle } from 'lucide-react'
 import * as React from 'react'
@@ -71,15 +71,15 @@ export function DataTableFacetedFilter<TData, TValue>({
 			<PopoverTrigger asChild>
 				<Button className="border-dashed font-normal" size="sm" variant="outline">
 					{selectedValues?.size > 0 ? (
-						<div
+						<button
 							aria-label={`Clear ${title} filter`}
 							className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 							onClick={onReset}
-							role="button"
 							tabIndex={0}
+							type="button"
 						>
 							<XCircle />
-						</div>
+						</button>
 					) : (
 						<PlusCircle />
 					)}

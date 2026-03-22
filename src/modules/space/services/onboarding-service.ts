@@ -75,7 +75,6 @@ export class OnboardingService {
 		let membership: Member
 		try {
 			membership = await this.repos.memberRepository.create({
-				organizationId: organization._id,
 				role: 'owner',
 				spaceId: organization._id,
 				userId,

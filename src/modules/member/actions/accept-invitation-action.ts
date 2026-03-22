@@ -51,7 +51,7 @@ export const acceptInvitationAction = async (
 	const invitationRepo = memberInvitationRepository(organizationId)
 	const service = new MemberInvitationService(memberRepo, invitationRepo)
 
-	const result = await service.accept(invitationId, user.id)
+	const result = await service.accept({ invitationId, userId: user.id })
 
 	if (!result.success) {
 		return result

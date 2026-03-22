@@ -54,12 +54,12 @@ describe('Result Pattern', () => {
 		it('should create a failure result with error detail', () => {
 			const errorObj = new Error('Database connection failed')
 			const result = failure({
-				error: errorObj,
+				error: errorObj.message,
 				message: 'DB Error',
 				type: 'DATABASE_ERROR',
 			})
 
-			expect(result.error).toBe(errorObj)
+			expect(result.error).toBe(errorObj.message)
 			expect(result.type).toBe('DATABASE_ERROR')
 		})
 
@@ -105,7 +105,7 @@ describe('Result Pattern', () => {
 
 			if (token === 'invalid') {
 				return failure({
-					error: new Error('Token signature invalid'),
+					error: 'Token signature invalid',
 					message: 'Invalid token',
 					type: 'AUTHORIZATION_ERROR',
 				})
@@ -143,7 +143,7 @@ describe('Result Pattern', () => {
 			expect(isFailure(result)).toBe(true)
 			if (isFailure(result)) {
 				expect(result.type).toBe('AUTHORIZATION_ERROR')
-				expect(result.error).toBeInstanceOf(Error)
+				expect(result.error).toBe('Token signature invalid')
 			}
 		})
 	})
