@@ -1,13 +1,19 @@
 import { type Database, db, projectsTable } from '@/infra/db'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import type { Project, ProjectInsert, ProjectUpdate } from '../types'
 import type { ProjectRepository } from './project-repository'
 
 export class ProjectDrizzleRepository implements ProjectRepository {
-	constructor(private db: Database) {}
+	constructor(
+		private db: Database,
+		private organizationId: string,
+	) {}
 
 	async create(input: ProjectInsert): Promise<Project> {
-		const [result] = await this.db.insert(projectsTable).values(input)
+		const [result] = await this.db
+			.insert(projectsTable)
+			.values({ ...input, organizationId: this.organizationId })
+			.returning()
 
 		return result
 	}
@@ -21,7 +27,7 @@ export class ProjectDrizzleRepository implements ProjectRepository {
 		const [result] = await this.db
 			.update(projectsTable)
 			.set(update)
-			.where(eq(projectsTable._id, id))
+			.where(and(eq(projectsTable._id, id), eq(projectsTable.organizationId, this.organizationId)))
 
 		return result
 	}
@@ -29,7 +35,7 @@ export class ProjectDrizzleRepository implements ProjectRepository {
 	async delete(id: string): Promise<{ deletedId: string }> {
 		const [result] = await this.db
 			.delete(projectsTable)
-			.where(eq(projectsTable._id, id))
+			.where(and(eq(projectsTable._id, id), eq(projectsTable.organizationId, this.organizationId)))
 			.returning({ deletedId: projectsTable._id })
 
 		return {
@@ -41,17 +47,22 @@ export class ProjectDrizzleRepository implements ProjectRepository {
 		const [result] = await this.db
 			.select()
 			.from(projectsTable)
-			.where(eq(projectsTable._id, id))
+			.where(and(eq(projectsTable._id, id), eq(projectsTable.organizationId, this.organizationId)))
 			.limit(1)
 
-		return result
+		return result ?? null
 	}
 
 	async findBySpaceId(spaceId: string): Promise<Project[]> {
 		const results = await this.db
 			.select()
 			.from(projectsTable)
-			.where(eq(projectsTable.spaceId, spaceId))
+			.where(
+				and(
+					eq(projectsTable.spaceId, spaceId),
+					eq(projectsTable.organizationId, this.organizationId),
+				),
+			)
 
 		return results
 	}
@@ -60,20 +71,37 @@ export class ProjectDrizzleRepository implements ProjectRepository {
 		const [result] = await this.db
 			.select()
 			.from(projectsTable)
-			.where(eq(projectsTable.slug, slug))
+			.where(
+				and(eq(projectsTable.slug, slug), eq(projectsTable.organizationId, this.organizationId)),
+			)
 			.limit(1)
 
-		return result
+		return result ?? null
 	}
 
 	async findByOwnerId(ownerId: string): Promise<Project[]> {
 		const results = await this.db
 			.select()
 			.from(projectsTable)
-			.where(eq(projectsTable.ownerId, ownerId))
+			.where(
+				and(
+					eq(projectsTable.ownerId, ownerId),
+					eq(projectsTable.organizationId, this.organizationId),
+				),
+			)
+
+		return results
+	}
+
+	async findByOrganizationId(organizationId: string): Promise<Project[]> {
+		const results = await this.db
+			.select()
+			.from(projectsTable)
+			.where(eq(projectsTable.organizationId, organizationId))
 
 		return results
 	}
 }
 
-export const projectRepository = () => new ProjectDrizzleRepository(db)
+export const projectRepository = (organizationId: string) =>
+	new ProjectDrizzleRepository(db, organizationId)

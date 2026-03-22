@@ -1,5 +1,10 @@
 import type { Member, MemberInsert, MemberUpdate } from '../types'
 
+/**
+ * Repository scoped to a specific organization.
+ * All queries are automatically filtered by the organizationId provided
+ * at construction time via the factory function.
+ */
 export interface MemberRepository {
 	create(input: MemberInsert): Promise<Member>
 	update(id: string, input: MemberUpdate): Promise<Member>
@@ -7,4 +12,5 @@ export interface MemberRepository {
 	findById(id: string): Promise<Member | null>
 	findByUserId(userId: string): Promise<Member[]>
 	findBySpaceId(spaceId: string): Promise<Member[]>
+	findByOrganizationId(organizationId: string): Promise<Member[]>
 }

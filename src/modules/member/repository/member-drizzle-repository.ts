@@ -1,13 +1,19 @@
 import { type Database, db, membersTable } from '@/infra/db'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import type { Member, MemberInsert, MemberUpdate } from '../types'
 import type { MemberRepository } from './member-repository'
 
 export class MemberDrizzleRepository implements MemberRepository {
-	constructor(private db: Database) {}
+	constructor(
+		private db: Database,
+		private organizationId: string,
+	) {}
 
 	async create(input: MemberInsert): Promise<Member> {
-		const [result] = await this.db.insert(membersTable).values(input)
+		const [result] = await this.db
+			.insert(membersTable)
+			.values({ ...input, organizationId: this.organizationId })
+			.returning()
 
 		return result
 	}
@@ -18,7 +24,10 @@ export class MemberDrizzleRepository implements MemberRepository {
 			updatedAt: new Date(),
 		}
 
-		const [result] = await this.db.update(membersTable).set(update).where(eq(membersTable._id, id))
+		const [result] = await this.db
+			.update(membersTable)
+			.set(update)
+			.where(and(eq(membersTable._id, id), eq(membersTable.organizationId, this.organizationId)))
 
 		return result
 	}
@@ -26,7 +35,7 @@ export class MemberDrizzleRepository implements MemberRepository {
 	async delete(id: string): Promise<{ deletedId: string }> {
 		const [result] = await this.db
 			.delete(membersTable)
-			.where(eq(membersTable._id, id))
+			.where(and(eq(membersTable._id, id), eq(membersTable.organizationId, this.organizationId)))
 			.returning({ deletedId: membersTable._id })
 
 		return {
@@ -38,26 +47,40 @@ export class MemberDrizzleRepository implements MemberRepository {
 		const [result] = await this.db
 			.select()
 			.from(membersTable)
-			.where(eq(membersTable._id, id))
+			.where(and(eq(membersTable._id, id), eq(membersTable.organizationId, this.organizationId)))
 			.limit(1)
 
-		return result
+		return result ?? null
 	}
 
 	async findByUserId(userId: string): Promise<Member[]> {
-		const results = await this.db.select().from(membersTable).where(eq(membersTable.userId, userId))
-
-		return results
+		return this.db
+			.select()
+			.from(membersTable)
+			.where(
+				and(eq(membersTable.userId, userId), eq(membersTable.organizationId, this.organizationId)),
+			)
 	}
 
 	async findBySpaceId(spaceId: string): Promise<Member[]> {
-		const results = await this.db
+		return this.db
 			.select()
 			.from(membersTable)
-			.where(eq(membersTable.spaceId, spaceId))
+			.where(
+				and(
+					eq(membersTable.spaceId, spaceId),
+					eq(membersTable.organizationId, this.organizationId),
+				),
+			)
+	}
 
-		return results
+	async findByOrganizationId(organizationId: string): Promise<Member[]> {
+		return this.db
+			.select()
+			.from(membersTable)
+			.where(eq(membersTable.organizationId, organizationId))
 	}
 }
 
-export const memberRepository = () => new MemberDrizzleRepository(db)
+export const memberRepository = (organizationId: string) =>
+	new MemberDrizzleRepository(db, organizationId)
