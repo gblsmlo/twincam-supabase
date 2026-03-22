@@ -136,6 +136,8 @@ describe('OnboardingService', () => {
 			}
 
 			expect(repos.spaceRepository.create).toHaveBeenCalledWith({
+				hierarchyLevel: 1,
+				hierarchyPath: '',
 				name: 'Test Org',
 				ownerId: TEST_USER_ID,
 				parentOrganizationId: null,
@@ -163,7 +165,7 @@ describe('OnboardingService', () => {
 			expect(result.success).toBe(false)
 			if (!result.success) {
 				expect(result.type).toBe('VALIDATION_ERROR')
-				expect(result.message).toContain('obrigatórios')
+				expect(result.message).toContain('obrigatório')
 			}
 		})
 

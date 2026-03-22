@@ -1,12 +1,12 @@
 import { type Database, db, spacesTable } from '@/infra/db'
 import { eq, inArray, like } from 'drizzle-orm'
-import type { Space, SpaceInsert, SpaceUpdate } from '../types'
+import type { Space, SpaceInsert, SpaceInsertFull, SpaceUpdate } from '../types'
 import type { SpaceRepository } from './space-repository'
 
 export class SpaceDrizzleRepository implements SpaceRepository {
 	constructor(private db: Database) {}
 
-	async create(input: SpaceInsert): Promise<Space> {
+	async create(input: SpaceInsert | SpaceInsertFull): Promise<Space> {
 		const [result] = await this.db.insert(spacesTable).values(input)
 
 		return result
