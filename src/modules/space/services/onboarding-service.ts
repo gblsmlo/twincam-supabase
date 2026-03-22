@@ -4,11 +4,11 @@ import type { MemberRepository } from '@/modules/member/repository/member-reposi
 import type { Member } from '@/modules/member/types'
 import type { SubscriptionRepository } from '@/modules/subscription/repository/subscription-repository'
 import type { Subscription } from '@/modules/subscription/types'
-import { failure, type Result, success } from '@/shared/errors/result'
+import { failure, isFailure, type Result, success } from '@/shared/errors/result'
+import { OrganizationFactory } from '../factories/organization-factory'
 import type { SpaceRepository } from '../repository/space-repository'
 import type { Space } from '../types'
 
-const SLUG_REGEX = /^[a-z0-9-]+$/
 const TRIAL_DAYS = 14
 
 export interface OnboardingResult {
@@ -49,29 +49,20 @@ export class OnboardingService {
 		userEmail: string,
 		userName: string,
 	): Promise<Result<OnboardingResult>> {
-		// Step 1: Validação
-		const validationError = this.validateInputs(userId, organizationName, organizationSlug)
-		if (validationError) {
-			return validationError
-		}
+		// Step 1: Validação + preparação via Factory
+		const createInput = await OrganizationFactory.createOrganizationWithValidation(
+			{ name: organizationName, ownerId: userId, slug: organizationSlug },
+			this.repos.spaceRepository,
+		)
 
-		const existingOrg = await this.repos.spaceRepository.findBySlug(organizationSlug)
-		if (existingOrg) {
-			return failure({
-				message: 'Esse slug de organização já está em uso.',
-				type: 'VALIDATION_ERROR',
-			})
+		if (isFailure(createInput)) {
+			return createInput
 		}
 
 		// Step 2: Cria Organization
 		let organization: Space
 		try {
-			organization = await this.repos.spaceRepository.create({
-				name: organizationName,
-				ownerId: userId,
-				parentOrganizationId: null,
-				slug: organizationSlug,
-			})
+			organization = await this.repos.spaceRepository.create(createInput.data)
 		} catch (error) {
 			return failure({
 				error: error instanceof Error ? error.message : 'Erro desconhecido',
@@ -112,28 +103,6 @@ export class OnboardingService {
 			},
 			'Usuário integrado com sucesso.',
 		)
-	}
-
-	private validateInputs(
-		userId: string,
-		organizationName: string,
-		organizationSlug: string,
-	): Result<never> | null {
-		if (!userId || !organizationName || !organizationSlug) {
-			return failure({
-				message: 'Campos obrigatórios não preenchidos.',
-				type: 'VALIDATION_ERROR',
-			})
-		}
-
-		if (!SLUG_REGEX.test(organizationSlug)) {
-			return failure({
-				message: 'Formato de slug inválido. Use apenas letras minúsculas, números e hífens.',
-				type: 'VALIDATION_ERROR',
-			})
-		}
-
-		return null
 	}
 
 	private async initializeBillingPlan(

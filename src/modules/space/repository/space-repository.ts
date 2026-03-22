@@ -1,7 +1,7 @@
-import type { Space, SpaceInsert, SpaceUpdate } from '../types'
+import type { Space, SpaceInsert, SpaceInsertFull, SpaceUpdate } from '../types'
 
 export interface SpaceRepository {
-	create(input: SpaceInsert): Promise<Space>
+	create(input: SpaceInsert | SpaceInsertFull): Promise<Space>
 	update(id: string, input: SpaceUpdate): Promise<Space>
 	delete(id: string): Promise<{ deletedId: string }>
 	findByOwnerId(id: string): Promise<Space | null>
