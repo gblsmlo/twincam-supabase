@@ -1,7 +1,12 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { failure, type Result, success } from '@/shared/errors/result'
+import { customerRepository } from '@/modules/customer/repository/customer-drizzle-repository'
+import { memberRepository } from '@/modules/member'
+import { spaceRepository } from '@/modules/space/repository/space-drizzle-repository'
+import { OnboardingService } from '@/modules/space/services/onboarding-service'
+import { subscriptionRepository } from '@/modules/subscription'
+import { failure, isFailure, type Result, success } from '@/shared/errors/result'
 import { type SignUpFormData, signUpSchema } from '../schemas'
 
 type SignUpOutput = {
@@ -25,7 +30,7 @@ export const signUpAction = async (formData: SignUpFormData): Promise<Result<Sig
 	try {
 		const supabase = await createClient()
 
-		const { error: authError } = await supabase.auth.signUp({
+		const { data, error: authError } = await supabase.auth.signUp({
 			email: validated.data.email,
 			options: {
 				data: {
@@ -36,12 +41,32 @@ export const signUpAction = async (formData: SignUpFormData): Promise<Result<Sig
 			password: validated.data.password,
 		})
 
-		if (authError) {
+		if (authError || !data.user) {
 			return failure({
-				error: authError.name || 'Erro no cadastro',
-				message: authError.message || 'Não foi possível criar a conta.',
+				error: authError?.name || 'Erro no cadastro',
+				message: authError?.message || 'Não foi possível criar a conta.',
 				type: 'AUTHORIZATION_ERROR',
 			})
+		}
+
+		// Onboarding: cria Organization + Membership + Billing
+		const onboardingService = new OnboardingService({
+			customerRepository: customerRepository(data.user.id),
+			memberRepository: memberRepository(data.user.id),
+			spaceRepository: spaceRepository(),
+			subscriptionRepository: subscriptionRepository(data.user.id),
+		})
+
+		const onboardResult = await onboardingService.onboardNewUser(
+			data.user.id,
+			validated.data.organizationName,
+			validated.data.organizationSlug,
+			validated.data.email,
+			validated.data.name,
+		)
+
+		if (isFailure(onboardResult)) {
+			return onboardResult
 		}
 
 		return success({
@@ -58,7 +83,7 @@ export const signUpAction = async (formData: SignUpFormData): Promise<Result<Sig
 
 		return failure({
 			error: 'UnknownError',
-			message: 'An unknown error occurred.',
+			message: 'Ocorreu um erro desconhecido.',
 			type: 'UNKNOWN_ERROR',
 		})
 	}

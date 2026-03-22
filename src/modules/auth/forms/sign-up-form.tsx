@@ -30,6 +30,8 @@ export function SignUpForm() {
 		defaultValues: {
 			email: '',
 			name: '',
+			organizationName: '',
+			organizationSlug: '',
 			password: '',
 		},
 		resolver: zodResolver(signUpSchema),
@@ -91,6 +93,42 @@ export function SignUpForm() {
 								<FormLabel>Email</FormLabel>
 								<FormControl>
 									<Input autoComplete="email" type="email" {...field} disabled={isSubmitPending} />
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<FormField
+						control={form.control}
+						name="organizationName"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Nome da organização</FormLabel>
+								<FormControl>
+									<Input
+										autoComplete="organization"
+										type="text"
+										{...field}
+										disabled={isSubmitPending}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+					<FormField
+						control={form.control}
+						name="organizationSlug"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Slug da organização</FormLabel>
+								<FormControl>
+									<Input
+										placeholder="minha-empresa"
+										type="text"
+										{...field}
+										disabled={isSubmitPending}
+									/>
 								</FormControl>
 								<FormMessage />
 							</FormItem>
