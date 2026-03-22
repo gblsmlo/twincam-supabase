@@ -1,7 +1,9 @@
-import { index, pgTable, text, uuid } from 'drizzle-orm/pg-core'
+import { index, pgEnum, pgTable, uuid } from 'drizzle-orm/pg-core'
 import { authUsers } from 'drizzle-orm/supabase'
 import { auditFields } from '../helpers'
 import { spacesTable } from './space'
+
+export const memberRoleEnum = pgEnum('member_role', ['ADMIN', 'MEMBER', 'OWNER'])
 
 export const membersTable = pgTable(
 	'members',
@@ -10,7 +12,7 @@ export const membersTable = pgTable(
 		organizationId: uuid('organization_id')
 			.notNull()
 			.references(() => spacesTable._id, { onDelete: 'cascade' }),
-		role: text().notNull().default('member'),
+		role: memberRoleEnum('role').notNull().default('MEMBER'),
 		spaceId: uuid('space_id')
 			.notNull()
 			.references(() => spacesTable._id, { onDelete: 'cascade' }),

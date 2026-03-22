@@ -9,8 +9,10 @@ export interface MemberRepository {
 	create(input: MemberInsert): Promise<Member>
 	update(id: string, input: MemberUpdate): Promise<Member>
 	delete(id: string): Promise<{ deletedId: string }>
+	deleteIfNotLastOwner(id: string, spaceId: string): Promise<{ deletedId: string } | null>
 	findById(id: string): Promise<Member | null>
 	findByUserId(userId: string): Promise<Member[]>
+	findByUserIdAndSpaceId(userId: string, spaceId: string): Promise<Member | null>
 	findBySpaceId(spaceId: string): Promise<Member[]>
 	findByOrganizationId(organizationId: string): Promise<Member[]>
 }

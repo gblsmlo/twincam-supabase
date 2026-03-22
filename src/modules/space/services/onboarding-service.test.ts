@@ -78,10 +78,12 @@ function createMockRepos() {
 		memberRepository: {
 			create: vi.fn().mockResolvedValue(mockMember),
 			delete: vi.fn(),
+			deleteIfNotLastOwner: vi.fn(),
 			findById: vi.fn(),
 			findByOrganizationId: vi.fn(),
 			findBySpaceId: vi.fn(),
 			findByUserId: vi.fn(),
+			findByUserIdAndSpaceId: vi.fn(),
 			update: vi.fn(),
 		} satisfies Record<keyof MemberRepository, unknown>,
 		spaceRepository: {
