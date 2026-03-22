@@ -37,18 +37,18 @@
 			"when": 1765329581035
 		},
 		{
+			"breakpoints": true,
 			"idx": 5,
-			"version": "7",
-			"when": 1774142645339,
 			"tag": "0005_grey_marrow",
-			"breakpoints": true
+			"version": "7",
+			"when": 1774142645339
 		},
 		{
+			"breakpoints": true,
 			"idx": 6,
-			"version": "7",
-			"when": 1774146927657,
 			"tag": "0006_add_organization_hierarchy",
-			"breakpoints": true
+			"version": "7",
+			"when": 1774146927657
 		}
 	],
 	"version": "7"
