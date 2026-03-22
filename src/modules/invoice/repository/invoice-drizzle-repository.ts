@@ -4,10 +4,16 @@ import type { Invoice, InvoiceInsert, InvoiceUpdate } from '../types'
 import type { InvoiceRepository } from './invoice-repository'
 
 export class InvoiceDrizzleRepository implements InvoiceRepository {
-	constructor(private db: Database) {}
+	constructor(
+		private db: Database,
+		private organizationId: string,
+	) {}
 
 	async create(input: InvoiceInsert): Promise<Invoice> {
-		const [result] = await this.db.insert(invoicesTable).values(input)
+		const [result] = await this.db
+			.insert(invoicesTable)
+			.values({ ...input, organizationId: this.organizationId })
+			.returning()
 
 		return result
 	}
@@ -21,7 +27,7 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 		const [result] = await this.db
 			.update(invoicesTable)
 			.set(update)
-			.where(eq(invoicesTable._id, id))
+			.where(and(eq(invoicesTable._id, id), eq(invoicesTable.organizationId, this.organizationId)))
 
 		return result
 	}
@@ -29,7 +35,7 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 	async delete(id: string): Promise<{ deletedId: string }> {
 		const [result] = await this.db
 			.delete(invoicesTable)
-			.where(eq(invoicesTable._id, id))
+			.where(and(eq(invoicesTable._id, id), eq(invoicesTable.organizationId, this.organizationId)))
 			.returning({ deletedId: invoicesTable._id })
 
 		return {
@@ -41,40 +47,55 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 		const [result] = await this.db
 			.select()
 			.from(invoicesTable)
-			.where(eq(invoicesTable._id, id))
+			.where(and(eq(invoicesTable._id, id), eq(invoicesTable.organizationId, this.organizationId)))
 			.limit(1)
 
-		return result
+		return result ?? null
 	}
 
 	async findBySubscriptionId(subscriptionId: string): Promise<Invoice[]> {
-		const results = await this.db
+		return await this.db
 			.select()
 			.from(invoicesTable)
-			.where(eq(invoicesTable.subscriptionId, subscriptionId))
+			.where(
+				and(
+					eq(invoicesTable.subscriptionId, subscriptionId),
+					eq(invoicesTable.organizationId, this.organizationId),
+				),
+			)
+	}
 
-		return results
+	async findByOrganizationId(organizationId: string): Promise<Invoice[]> {
+		return await this.db
+			.select()
+			.from(invoicesTable)
+			.where(eq(invoicesTable.organizationId, organizationId))
 	}
 
 	async findOverdue(): Promise<Invoice[]> {
 		const now = new Date()
 
-		const results = await this.db
+		return await this.db
 			.select()
 			.from(invoicesTable)
-			.where(and(ne(invoicesTable.status, 'paid'), lt(invoicesTable.dueDate, now)))
-
-		return results
+			.where(
+				and(
+					ne(invoicesTable.status, 'paid'),
+					lt(invoicesTable.dueDate, now),
+					eq(invoicesTable.organizationId, this.organizationId),
+				),
+			)
 	}
 
 	async findLatestByCustomerId(customerId: string): Promise<Invoice | null> {
 		const [result] = await this.db
 			.select({
+				_id: invoicesTable._id,
 				amount: invoicesTable.amount,
 				createdAt: invoicesTable.createdAt,
 				currency: invoicesTable.currency,
 				dueDate: invoicesTable.dueDate,
-				id: invoicesTable._id,
+				organizationId: invoicesTable.organizationId,
 				paidAt: invoicesTable.paidAt,
 				status: invoicesTable.status,
 				subscriptionId: invoicesTable.subscriptionId,
@@ -82,12 +103,18 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 			})
 			.from(invoicesTable)
 			.innerJoin(subscriptionsTable, eq(invoicesTable.subscriptionId, subscriptionsTable._id))
-			.where(eq(subscriptionsTable.customerId, customerId))
+			.where(
+				and(
+					eq(subscriptionsTable.customerId, customerId),
+					eq(invoicesTable.organizationId, this.organizationId),
+				),
+			)
 			.orderBy(desc(invoicesTable.createdAt))
 			.limit(1)
 
-		return result
+		return result ?? null
 	}
 }
 
-export const invoiceRepository = () => new InvoiceDrizzleRepository(db)
+export const invoiceRepository = (organizationId: string) =>
+	new InvoiceDrizzleRepository(db, organizationId)

@@ -1,13 +1,18 @@
 import { type Database, db, productsTable } from '@/infra/db'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import type { Product, ProductInsert, ProductUpdate } from '../types'
 import type { ProductRepository } from './product-repository'
 
 export class ProductDrizzleRepository implements ProductRepository {
-	constructor(private db: Database) {}
+	constructor(
+		private db: Database,
+		private organizationId?: string | null,
+	) {}
 
 	async create(input: ProductInsert): Promise<Product> {
-		const [result] = await this.db.insert(productsTable).values(input)
+		const values = this.organizationId ? { ...input, organizationId: this.organizationId } : input
+
+		const [result] = await this.db.insert(productsTable).values(values).returning()
 
 		return result
 	}
@@ -18,18 +23,23 @@ export class ProductDrizzleRepository implements ProductRepository {
 			updatedAt: new Date(),
 		}
 
-		const [result] = await this.db
-			.update(productsTable)
-			.set(update)
-			.where(eq(productsTable._id, id))
+		const whereClause = this.organizationId
+			? and(eq(productsTable._id, id), eq(productsTable.organizationId, this.organizationId))
+			: eq(productsTable._id, id)
+
+		const [result] = await this.db.update(productsTable).set(update).where(whereClause)
 
 		return result
 	}
 
 	async delete(id: string): Promise<{ deletedId: string }> {
+		const whereClause = this.organizationId
+			? and(eq(productsTable._id, id), eq(productsTable.organizationId, this.organizationId))
+			: eq(productsTable._id, id)
+
 		const [result] = await this.db
 			.delete(productsTable)
-			.where(eq(productsTable._id, id))
+			.where(whereClause)
 			.returning({ deletedId: productsTable._id })
 
 		return {
@@ -38,29 +48,44 @@ export class ProductDrizzleRepository implements ProductRepository {
 	}
 
 	async findById(id: string): Promise<Product | null> {
-		const [result] = await this.db
-			.select()
-			.from(productsTable)
-			.where(eq(productsTable._id, id))
-			.limit(1)
+		const whereClause = this.organizationId
+			? and(eq(productsTable._id, id), eq(productsTable.organizationId, this.organizationId))
+			: eq(productsTable._id, id)
 
-		return result
+		const [result] = await this.db.select().from(productsTable).where(whereClause).limit(1)
+
+		return result ?? null
 	}
 
 	async findByPriceId(priceId: string): Promise<Product[]> {
-		const results = await this.db
+		const whereClause = this.organizationId
+			? and(
+					eq(productsTable.priceId, priceId),
+					eq(productsTable.organizationId, this.organizationId),
+				)
+			: eq(productsTable.priceId, priceId)
+
+		return await this.db.select().from(productsTable).where(whereClause)
+	}
+
+	async findByOrganizationId(organizationId: string): Promise<Product[]> {
+		return await this.db
 			.select()
 			.from(productsTable)
-			.where(eq(productsTable.priceId, priceId))
-
-		return results
+			.where(eq(productsTable.organizationId, organizationId))
 	}
 
 	async findAll(): Promise<Product[]> {
-		const results = await this.db.select().from(productsTable)
+		if (this.organizationId) {
+			return await this.db
+				.select()
+				.from(productsTable)
+				.where(eq(productsTable.organizationId, this.organizationId))
+		}
 
-		return results
+		return await this.db.select().from(productsTable)
 	}
 }
 
-export const productRepository = () => new ProductDrizzleRepository(db)
+export const productRepository = (organizationId?: string | null) =>
+	new ProductDrizzleRepository(db, organizationId)

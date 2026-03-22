@@ -2,9 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/infra/db', () => ({
 	customersTable: {
+		_id: 'mock-_id',
 		email: 'mock-email',
-		id: 'mock-id',
 		name: 'mock-name',
+		organizationId: 'mock-organizationId',
 		spaceId: 'mock-spaceId',
 		status: 'mock-status',
 	},
@@ -16,11 +17,14 @@ import { customersTable } from '@/infra/db'
 import type { Customer, CustomerInsert, CustomerUpdate } from '../types'
 import { CustomerDrizzleRepository } from './customer-drizzle-repository'
 
+const TEST_ORG_ID = '550e8400-e29b-41d4-a716-446655440099'
+
 const mockCustomer: Customer = {
+	_id: '550e8400-e29b-41d4-a716-446655440000',
 	createdAt: new Date(),
 	email: 'customer@example.com',
-	id: '550e8400-e29b-41d4-a716-446655440000',
 	name: 'Test Customer',
+	organizationId: TEST_ORG_ID,
 	spaceId: '550e8400-e29b-41d4-a716-446655440001',
 	status: 'active',
 	updatedAt: new Date(),
@@ -28,8 +32,8 @@ const mockCustomer: Customer = {
 
 const mockCustomerInsert: CustomerInsert = {
 	email: mockCustomer.email,
-	id: mockCustomer.id,
 	name: mockCustomer.name,
+	organizationId: mockCustomer.organizationId,
 	spaceId: mockCustomer.spaceId,
 }
 
@@ -52,60 +56,64 @@ describe('CustomerDrizzleRepository', () => {
 
 	describe('create', () => {
 		it('should create a new customer successfully', async () => {
-			const mockValues = vi.fn().mockResolvedValue([mockCustomer])
+			const mockReturning = vi.fn().mockResolvedValue([mockCustomer])
+			const mockValues = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockInsert = vi.fn().mockReturnValue({ values: mockValues })
 
 			mockDb = {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.create(mockCustomerInsert)
 
 			expect(mockInsert).toHaveBeenCalledWith(customersTable)
-			expect(mockValues).toHaveBeenCalledWith(mockCustomerInsert)
+			expect(mockValues).toHaveBeenCalledWith(
+				expect.objectContaining({
+					email: mockCustomerInsert.email,
+					organizationId: TEST_ORG_ID,
+				}),
+			)
 			expect(result).toEqual(mockCustomer)
 		})
 
 		it('should propagate error when database fails', async () => {
 			const dbError = new Error('Database connection failed')
-			const mockValues = vi.fn().mockRejectedValue(dbError)
+			const mockReturning = vi.fn().mockRejectedValue(dbError)
+			const mockValues = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockInsert = vi.fn().mockReturnValue({ values: mockValues })
 
 			mockDb = {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.create(mockCustomerInsert)).rejects.toThrow(
 				'Database connection failed',
 			)
 		})
 
-		it('should create customer with only required fields', async () => {
-			const minimalInsert: CustomerInsert = {
-				email: mockCustomer.email,
-				id: mockCustomer.id,
-				name: mockCustomer.name,
-				spaceId: mockCustomer.spaceId,
+		it('should override organizationId in input with the repository context', async () => {
+			const differentOrgInsert: CustomerInsert = {
+				...mockCustomerInsert,
+				organizationId: 'different-org-id',
 			}
-			const minimalCustomer = { ...mockCustomer }
-
-			const mockValues = vi.fn().mockResolvedValue([minimalCustomer])
+			const mockReturning = vi.fn().mockResolvedValue([mockCustomer])
+			const mockValues = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockInsert = vi.fn().mockReturnValue({ values: mockValues })
 
 			mockDb = {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			const result = await repository.create(minimalInsert)
+			await repository.create(differentOrgInsert)
 
-			expect(result).toEqual(minimalCustomer)
-			expect(mockValues).toHaveBeenCalledWith(minimalInsert)
+			const setCallArg = mockValues.mock.calls[0][0]
+			expect(setCallArg.organizationId).toBe(TEST_ORG_ID)
 		})
 	})
 
@@ -120,9 +128,9 @@ describe('CustomerDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			const result = await repository.update(mockCustomer.id, mockCustomerUpdate)
+			const result = await repository.update(mockCustomer._id, mockCustomerUpdate)
 
 			expect(mockUpdate).toHaveBeenCalledWith(customersTable)
 			expect(mockSet).toHaveBeenCalled()
@@ -148,9 +156,9 @@ describe('CustomerDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			await repository.update(mockCustomer.id, mockCustomerUpdate)
+			await repository.update(mockCustomer._id, mockCustomerUpdate)
 			const dateAfter = new Date()
 
 			const setCallArg = mockSet.mock.calls[0][0]
@@ -169,9 +177,9 @@ describe('CustomerDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			await expect(repository.update(mockCustomer.id, mockCustomerUpdate)).rejects.toThrow(
+			await expect(repository.update(mockCustomer._id, mockCustomerUpdate)).rejects.toThrow(
 				'Update failed',
 			)
 		})
@@ -185,7 +193,7 @@ describe('CustomerDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.update('non-existent-id', mockCustomerUpdate)
 
@@ -195,7 +203,7 @@ describe('CustomerDrizzleRepository', () => {
 
 	describe('delete', () => {
 		it('should delete a customer successfully and return deletedId', async () => {
-			const mockReturning = vi.fn().mockResolvedValue([{ deletedId: mockCustomer.id }])
+			const mockReturning = vi.fn().mockResolvedValue([{ deletedId: mockCustomer._id }])
 			const mockWhere = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockDelete = vi.fn().mockReturnValue({ where: mockWhere })
 
@@ -203,14 +211,14 @@ describe('CustomerDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			const result = await repository.delete(mockCustomer.id)
+			const result = await repository.delete(mockCustomer._id)
 
 			expect(mockDelete).toHaveBeenCalledWith(customersTable)
 			expect(mockWhere).toHaveBeenCalled()
 			expect(mockReturning).toHaveBeenCalled()
-			expect(result).toEqual({ deletedId: mockCustomer.id })
+			expect(result).toEqual({ deletedId: mockCustomer._id })
 		})
 
 		it('should propagate error when deletion fails', async () => {
@@ -223,9 +231,9 @@ describe('CustomerDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			await expect(repository.delete(mockCustomer.id)).rejects.toThrow('Delete failed')
+			await expect(repository.delete(mockCustomer._id)).rejects.toThrow('Delete failed')
 		})
 
 		it('should handle attempt to delete non-existent record', async () => {
@@ -237,7 +245,7 @@ describe('CustomerDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.delete('non-existent-id')
 
@@ -256,9 +264,9 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			const result = await repository.findById(mockCustomer.id)
+			const result = await repository.findById(mockCustomer._id)
 
 			expect(mockSelect).toHaveBeenCalled()
 			expect(mockFrom).toHaveBeenCalledWith(customersTable)
@@ -267,7 +275,7 @@ describe('CustomerDrizzleRepository', () => {
 			expect(result).toEqual(mockCustomer)
 		})
 
-		it('should return undefined when customer is not found', async () => {
+		it('should return null when customer is not found', async () => {
 			const mockLimit = vi.fn().mockResolvedValue([])
 			const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit })
 			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
@@ -277,11 +285,11 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findById('non-existent-id')
 
-			expect(result).toBeUndefined()
+			expect(result).toBeNull()
 		})
 
 		it('should propagate error when query fails', async () => {
@@ -295,9 +303,9 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			await expect(repository.findById(mockCustomer.id)).rejects.toThrow('Query failed')
+			await expect(repository.findById(mockCustomer._id)).rejects.toThrow('Query failed')
 		})
 	})
 
@@ -312,7 +320,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findByEmail(mockCustomer.email)
 
@@ -323,7 +331,7 @@ describe('CustomerDrizzleRepository', () => {
 			expect(result).toEqual(mockCustomer)
 		})
 
-		it('should return undefined when email is not found', async () => {
+		it('should return null when email is not found', async () => {
 			const mockLimit = vi.fn().mockResolvedValue([])
 			const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit })
 			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
@@ -333,11 +341,11 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findByEmail('nonexistent@example.com')
 
-			expect(result).toBeUndefined()
+			expect(result).toBeNull()
 		})
 
 		it('should propagate error when query fails', async () => {
@@ -351,17 +359,17 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.findByEmail(mockCustomer.email)).rejects.toThrow('Query failed')
 		})
 	})
 
 	describe('findBySpaceId', () => {
-		it('should find all customers by spaceId successfully', async () => {
+		it('should find all customers by spaceId within the organization', async () => {
 			const mockCustomers = [
 				mockCustomer,
-				{ ...mockCustomer, id: 'another-id', name: 'Another Customer' },
+				{ ...mockCustomer, _id: 'another-id', name: 'Another Customer' },
 			]
 			const mockWhere = vi.fn().mockResolvedValue(mockCustomers)
 			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
@@ -371,7 +379,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findBySpaceId(mockCustomer.spaceId)
 
@@ -391,7 +399,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findBySpaceId('non-existent-space')
 
@@ -408,15 +416,53 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.findBySpaceId(mockCustomer.spaceId)).rejects.toThrow('Query failed')
 		})
 	})
 
+	describe('findByOrganizationId', () => {
+		it('should find all customers by organizationId', async () => {
+			const mockCustomers = [mockCustomer, { ...mockCustomer, _id: 'another-id' }]
+			const mockWhere = vi.fn().mockResolvedValue(mockCustomers)
+			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+
+			mockDb = {
+				select: mockSelect,
+			} as unknown as Database
+
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+
+			const result = await repository.findByOrganizationId(TEST_ORG_ID)
+
+			expect(mockSelect).toHaveBeenCalled()
+			expect(mockFrom).toHaveBeenCalledWith(customersTable)
+			expect(mockWhere).toHaveBeenCalled()
+			expect(result).toEqual(mockCustomers)
+		})
+
+		it('should return empty array when no customers found for organization', async () => {
+			const mockWhere = vi.fn().mockResolvedValue([])
+			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+
+			mockDb = {
+				select: mockSelect,
+			} as unknown as Database
+
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+
+			const result = await repository.findByOrganizationId('non-existent-org')
+
+			expect(result).toEqual([])
+		})
+	})
+
 	describe('findAllByStatus', () => {
-		it('should find all customers with active status', async () => {
-			const activeCustomers = [mockCustomer, { ...mockCustomer, id: 'another-id' }]
+		it('should find all customers with active status within the organization', async () => {
+			const activeCustomers = [mockCustomer, { ...mockCustomer, _id: 'another-id' }]
 			const mockWhere = vi.fn().mockResolvedValue(activeCustomers)
 			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
 			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
@@ -425,7 +471,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findAllByStatus('active')
 
@@ -435,7 +481,7 @@ describe('CustomerDrizzleRepository', () => {
 			expect(result).toEqual(activeCustomers)
 		})
 
-		it('should find all customers with inactive status', async () => {
+		it('should find all customers with inactive status within the organization', async () => {
 			const inactiveCustomer = { ...mockCustomer, status: 'inactive' as const }
 			const mockWhere = vi.fn().mockResolvedValue([inactiveCustomer])
 			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
@@ -445,7 +491,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findAllByStatus('inactive')
 
@@ -461,7 +507,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findAllByStatus('inactive')
 
@@ -478,7 +524,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb)
+			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.findAllByStatus('active')).rejects.toThrow('Query failed')
 		})

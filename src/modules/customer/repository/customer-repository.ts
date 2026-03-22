@@ -7,5 +7,6 @@ export interface CustomerRepository {
 	findById(id: string): Promise<Customer | null>
 	findByEmail(email: string): Promise<Customer | null>
 	findBySpaceId(spaceId: string): Promise<Customer[]>
+	findByOrganizationId(organizationId: string): Promise<Customer[]>
 	findAllByStatus(status: 'active' | 'inactive'): Promise<Customer[]>
 }

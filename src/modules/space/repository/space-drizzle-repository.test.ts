@@ -5,8 +5,11 @@ vi.mock('@/infra/db', () => ({
 	spacesTable: {
 		_id: 'mock-id',
 		description: 'mock-description',
+		hierarchyLevel: 'mock-hierarchyLevel',
+		hierarchyPath: 'mock-hierarchyPath',
 		name: 'mock-name',
 		ownerId: 'mock-ownerId',
+		parentOrganizationId: 'mock-parentOrganizationId',
 		slug: 'mock-slug',
 	},
 }))
@@ -20,8 +23,11 @@ const mockSpace: Space = {
 	_id: '550e8400-e29b-41d4-a716-446655440000',
 	createdAt: new Date(),
 	description: 'Test space description',
+	hierarchyLevel: 1,
+	hierarchyPath: '550e8400-e29b-41d4-a716-446655440000',
 	name: 'Test Space',
 	ownerId: '550e8400-e29b-41d4-a716-446655440001',
+	parentOrganizationId: null,
 	slug: 'test-space',
 	updatedAt: new Date(),
 }
@@ -380,6 +386,198 @@ describe('SpaceDrizzleRepository', () => {
 			const result = await repository.findBySlug('TEST-SPACE')
 
 			expect(result).toBeUndefined()
+		})
+	})
+
+	describe('findByParentId', () => {
+		it('should find direct children of a parent organization', async () => {
+			const childSpace: Space = {
+				...mockSpace,
+				_id: '550e8400-e29b-41d4-a716-446655440002',
+				hierarchyLevel: 2,
+				hierarchyPath: `${mockSpace._id}.550e8400-e29b-41d4-a716-446655440002`,
+				parentOrganizationId: mockSpace._id,
+			}
+
+			const mockWhere = vi.fn().mockResolvedValue([childSpace])
+			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+
+			mockDb = { select: mockSelect } as unknown as Database
+			repository = new SpaceDrizzleRepository(mockDb)
+
+			const result = await repository.findByParentId(mockSpace._id)
+
+			expect(mockSelect).toHaveBeenCalled()
+			expect(mockFrom).toHaveBeenCalledWith(spacesTable)
+			expect(mockWhere).toHaveBeenCalled()
+			expect(result).toEqual([childSpace])
+		})
+
+		it('should return empty array when no children exist', async () => {
+			const mockWhere = vi.fn().mockResolvedValue([])
+			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+
+			mockDb = { select: mockSelect } as unknown as Database
+			repository = new SpaceDrizzleRepository(mockDb)
+
+			const result = await repository.findByParentId('no-children-id')
+
+			expect(result).toEqual([])
+		})
+	})
+
+	describe('findAncestors', () => {
+		it('should find all ancestors of an organization', async () => {
+			const rootId = '550e8400-e29b-41d4-a716-446655440010'
+			const childId = '550e8400-e29b-41d4-a716-446655440011'
+			const grandchildId = '550e8400-e29b-41d4-a716-446655440012'
+
+			const grandchild: Space = {
+				...mockSpace,
+				_id: grandchildId,
+				hierarchyLevel: 3,
+				hierarchyPath: `${rootId}.${childId}.${grandchildId}`,
+				parentOrganizationId: childId,
+			}
+
+			const rootSpace: Space = { ...mockSpace, _id: rootId }
+			const childSpace: Space = { ...mockSpace, _id: childId }
+
+			const mockLimit = vi.fn().mockResolvedValue([grandchild])
+			const mockWhereFirst = vi.fn().mockReturnValue({ limit: mockLimit })
+			const mockFromFirst = vi.fn().mockReturnValue({ where: mockWhereFirst })
+
+			const mockWhereSecond = vi.fn().mockResolvedValue([rootSpace, childSpace])
+			const mockFromSecond = vi.fn().mockReturnValue({ where: mockWhereSecond })
+
+			let selectCallCount = 0
+			const mockSelect = vi.fn().mockImplementation(() => {
+				selectCallCount++
+				if (selectCallCount === 1) return { from: mockFromFirst }
+				return { from: mockFromSecond }
+			})
+
+			mockDb = { select: mockSelect } as unknown as Database
+			repository = new SpaceDrizzleRepository(mockDb)
+
+			const result = await repository.findAncestors(grandchildId)
+
+			expect(result).toEqual([rootSpace, childSpace])
+		})
+
+		it('should return empty array for root organization', async () => {
+			const rootSpace: Space = {
+				...mockSpace,
+				hierarchyPath: mockSpace._id,
+			}
+
+			const mockLimit = vi.fn().mockResolvedValue([rootSpace])
+			const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit })
+			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+
+			mockDb = { select: mockSelect } as unknown as Database
+			repository = new SpaceDrizzleRepository(mockDb)
+
+			const result = await repository.findAncestors(mockSpace._id)
+
+			expect(result).toEqual([])
+		})
+
+		it('should return empty array when organization not found', async () => {
+			const mockLimit = vi.fn().mockResolvedValue([])
+			const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit })
+			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+
+			mockDb = { select: mockSelect } as unknown as Database
+			repository = new SpaceDrizzleRepository(mockDb)
+
+			const result = await repository.findAncestors('non-existent')
+
+			expect(result).toEqual([])
+		})
+	})
+
+	describe('findDescendants', () => {
+		it('should find all descendants using LIKE on hierarchyPath', async () => {
+			const childSpace: Space = {
+				...mockSpace,
+				_id: '550e8400-e29b-41d4-a716-446655440002',
+				hierarchyLevel: 2,
+				hierarchyPath: `${mockSpace._id}.550e8400-e29b-41d4-a716-446655440002`,
+				parentOrganizationId: mockSpace._id,
+			}
+
+			const rootSpace: Space = {
+				...mockSpace,
+				hierarchyPath: mockSpace._id,
+			}
+
+			const mockLimit = vi.fn().mockResolvedValue([rootSpace])
+			const mockWhereFirst = vi.fn().mockReturnValue({ limit: mockLimit })
+			const mockFromFirst = vi.fn().mockReturnValue({ where: mockWhereFirst })
+
+			const mockWhereSecond = vi.fn().mockResolvedValue([childSpace])
+			const mockFromSecond = vi.fn().mockReturnValue({ where: mockWhereSecond })
+
+			let selectCallCount = 0
+			const mockSelect = vi.fn().mockImplementation(() => {
+				selectCallCount++
+				if (selectCallCount === 1) return { from: mockFromFirst }
+				return { from: mockFromSecond }
+			})
+
+			mockDb = { select: mockSelect } as unknown as Database
+			repository = new SpaceDrizzleRepository(mockDb)
+
+			const result = await repository.findDescendants(mockSpace._id)
+
+			expect(result).toEqual([childSpace])
+		})
+
+		it('should return empty array when no descendants exist', async () => {
+			const leafSpace: Space = {
+				...mockSpace,
+				hierarchyPath: mockSpace._id,
+			}
+
+			const mockLimit = vi.fn().mockResolvedValue([leafSpace])
+			const mockWhereFirst = vi.fn().mockReturnValue({ limit: mockLimit })
+			const mockFromFirst = vi.fn().mockReturnValue({ where: mockWhereFirst })
+
+			const mockWhereSecond = vi.fn().mockResolvedValue([])
+			const mockFromSecond = vi.fn().mockReturnValue({ where: mockWhereSecond })
+
+			let selectCallCount = 0
+			const mockSelect = vi.fn().mockImplementation(() => {
+				selectCallCount++
+				if (selectCallCount === 1) return { from: mockFromFirst }
+				return { from: mockFromSecond }
+			})
+
+			mockDb = { select: mockSelect } as unknown as Database
+			repository = new SpaceDrizzleRepository(mockDb)
+
+			const result = await repository.findDescendants(mockSpace._id)
+
+			expect(result).toEqual([])
+		})
+
+		it('should return empty array when organization not found', async () => {
+			const mockLimit = vi.fn().mockResolvedValue([])
+			const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit })
+			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+
+			mockDb = { select: mockSelect } as unknown as Database
+			repository = new SpaceDrizzleRepository(mockDb)
+
+			const result = await repository.findDescendants('non-existent')
+
+			expect(result).toEqual([])
 		})
 	})
 })

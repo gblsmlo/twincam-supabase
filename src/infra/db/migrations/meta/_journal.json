@@ -35,6 +35,20 @@
 			"tag": "0004_sturdy_ricochet",
 			"version": "7",
 			"when": 1765329581035
+		},
+		{
+			"idx": 5,
+			"version": "7",
+			"when": 1774142645339,
+			"tag": "0005_grey_marrow",
+			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "7",
+			"when": 1774146927657,
+			"tag": "0006_add_organization_hierarchy",
+			"breakpoints": true
 		}
 	],
 	"version": "7"
