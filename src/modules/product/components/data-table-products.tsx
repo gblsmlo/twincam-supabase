@@ -5,8 +5,12 @@ import { findProductAction } from '../actions'
 import { dataTableProductColumns } from './columns'
 import { CreateProductDialog } from './create-product-dialog'
 
-export async function DataTableProducts() {
-	const result = await findProductAction()
+type DataTableProductsProps = {
+	organizationId: string
+}
+
+export async function DataTableProducts({ organizationId }: DataTableProductsProps) {
+	const result = await findProductAction(organizationId)
 
 	await sleep(5000)
 
@@ -22,7 +26,7 @@ export async function DataTableProducts() {
 
 	return (
 		<DataTableView
-			actionToCreate={<CreateProductDialog />}
+			actionToCreate={<CreateProductDialog organizationId={organizationId} />}
 			columns={dataTableProductColumns}
 			data={products}
 			pageCount={0}

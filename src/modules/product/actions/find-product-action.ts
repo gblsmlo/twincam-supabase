@@ -8,9 +8,11 @@ type FindProductOutput = {
 	products: Product[]
 }
 
-export const findProductAction = async (): Promise<Result<FindProductOutput>> => {
+export const findProductAction = async (
+	organizationId: string,
+): Promise<Result<FindProductOutput>> => {
 	try {
-		const repository = productRepository()
+		const repository = productRepository(organizationId)
 
 		const products = await repository.findAll()
 

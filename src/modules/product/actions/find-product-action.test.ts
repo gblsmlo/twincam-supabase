@@ -11,13 +11,15 @@ vi.mock('@/shared/errors/result', async () => {
 	return actual
 })
 
+const TEST_ORG_ID = '550e8400-e29b-41d4-a716-446655440099'
+
 const mockProducts: Product[] = [
 	{
 		_id: '550e8400-e29b-41d4-a716-446655440000',
 		createdAt: new Date('2024-01-01T00:00:00Z'),
 		description: 'Product 1',
 		name: 'Test Product 1',
-		organizationId: null,
+		organizationId: TEST_ORG_ID,
 		priceId: '550e8400-e29b-41d4-a716-446655440001',
 		updatedAt: new Date('2024-01-01T00:00:00Z'),
 	},
@@ -26,7 +28,7 @@ const mockProducts: Product[] = [
 		createdAt: new Date('2024-01-02T00:00:00Z'),
 		description: 'Product 2',
 		name: 'Test Product 2',
-		organizationId: null,
+		organizationId: TEST_ORG_ID,
 		priceId: null,
 		updatedAt: new Date('2024-01-02T00:00:00Z'),
 	},
@@ -45,7 +47,7 @@ describe('findProductAction', () => {
 			findAll: mockFindAll,
 		} as any)
 
-		const result = await findProductAction()
+		const result = await findProductAction(TEST_ORG_ID)
 
 		expect(result.success).toBe(true)
 		if (result.success) {
@@ -63,7 +65,7 @@ describe('findProductAction', () => {
 			findAll: mockFindAll,
 		} as any)
 
-		const result = await findProductAction()
+		const result = await findProductAction(TEST_ORG_ID)
 
 		expect(result.success).toBe(true)
 		if (result.success) {
@@ -80,7 +82,7 @@ describe('findProductAction', () => {
 			findAll: mockFindAll,
 		} as any)
 
-		const result = await findProductAction()
+		const result = await findProductAction(TEST_ORG_ID)
 
 		expect(result.success).toBe(false)
 		if (!result.success) {
@@ -98,7 +100,7 @@ describe('findProductAction', () => {
 			findAll: mockFindAll,
 		} as any)
 
-		const result = await findProductAction()
+		const result = await findProductAction(TEST_ORG_ID)
 
 		expect(result.success).toBe(false)
 		if (!result.success) {

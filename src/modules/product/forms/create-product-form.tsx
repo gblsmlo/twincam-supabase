@@ -22,10 +22,15 @@ import type { ProductInsert } from '../types'
 
 type CreateProductFormProps = {
 	onSuccess?: () => void
+	organizationId: string
 	submitButtonId?: string
 }
 
-export function CreateProductForm({ onSuccess, submitButtonId }: CreateProductFormProps) {
+export function CreateProductForm({
+	onSuccess,
+	organizationId,
+	submitButtonId,
+}: CreateProductFormProps) {
 	const [isPending, startTransition] = useTransition()
 	const router = useRouter()
 
@@ -44,7 +49,7 @@ export function CreateProductForm({ onSuccess, submitButtonId }: CreateProductFo
 		form.clearErrors()
 
 		startTransition(async () => {
-			const result = await createProductAction(formData)
+			const result = await createProductAction(organizationId, formData)
 
 			if (isFailure(result)) {
 				form.setError('root', {
