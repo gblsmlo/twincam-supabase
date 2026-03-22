@@ -47,8 +47,21 @@
 			"breakpoints": true,
 			"idx": 6,
 			"tag": "0006_add_organization_hierarchy",
+			"breakpoints": true
+		},
+		{
+			"idx": 7,
 			"version": "7",
-			"when": 1774146927657
+			"when": 1774148414915,
+			"tag": "0007_clear_the_professor",
+			"breakpoints": true
+		},
+		{
+			"idx": 8,
+			"version": "7",
+			"when": 1774187981489,
+			"tag": "0008_drop_users_table_use_app_metadata",
+			"breakpoints": true
 		}
 	],
 	"version": "7"

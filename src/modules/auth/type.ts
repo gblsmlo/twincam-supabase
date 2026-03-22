@@ -2,6 +2,7 @@ export interface UserAuth {
 	id: string
 	name: string
 	email: string
+	isPlatformAdmin: boolean
 }
 
 export interface UserSupabase {
@@ -9,5 +10,8 @@ export interface UserSupabase {
 	email?: string
 	user_metadata?: Record<string, unknown> & {
 		username?: string
+	}
+	app_metadata?: Record<string, unknown> & {
+		is_platform_admin?: boolean
 	}
 }
