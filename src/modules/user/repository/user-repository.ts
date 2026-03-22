@@ -1,11 +1,14 @@
-import type { User, UserInsert, UserUpdate } from '../types'
+import type { User } from '../types'
 
+/**
+ * Repository para operacoes sobre o User entity.
+ * Diferente dos outros repos: nao usa Drizzle/tabela propria.
+ * Wraps Supabase Admin API para gerenciar app_metadata em auth.users.
+ */
 export interface UserRepository {
-	create(input: UserInsert): Promise<User>
-	update(id: string, input: UserUpdate): Promise<User>
-	delete(id: string): Promise<{ deletedId: string }>
 	findById(id: string): Promise<User | null>
 	findByEmail(email: string): Promise<User | null>
-	makePlatformAdmin(id: string): Promise<User>
-	revokePlatformAdmin(id: string): Promise<User>
+	makePlatformAdmin(id: string): Promise<void>
+	revokePlatformAdmin(id: string): Promise<void>
+	isPlatformAdmin(id: string): Promise<boolean>
 }

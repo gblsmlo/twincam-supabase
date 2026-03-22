@@ -2,318 +2,397 @@
 
 **Severity:** HIGH
 **Category:** Domain Model | Tactical Design | Authorization
-**Status:** Open
+**Status:** Implemented — Schema corrigido para app_metadata
 **Linear:** [PRD-23](https://linear.app/studio-risine/issue/PRD-23/ddd-015-missing-user-entity-and-is-platform-admin-flag)
 **Blocks:** DDD-012, DDD-016, Platform admin feature
 **Depends on:** DDD-009
 
 ## Problem
 
-Tactical design requires a **User entity** with `is_platform_admin` flag for super-admin capabilities, but the codebase only has Supabase's `auth.users` (external, not domain model).
+Tactical design requer uma **User entity** com `is_platform_admin` para super-admin capabilities, mas a implementação atual cria uma tabela `public.users` que **duplica dados de `auth.users`** (email), criando risco de dessincronização.
 
-**Current State:**
+**Estado atual (incorreto):**
 ```typescript
-// No User entity in domain
-// Uses Supabase auth.users directly
-// No is_platform_admin flag anywhere
+// public.users duplica email de auth.users — risco de sync
+export const usersTable = pgTable('users', {
+  _id: uuid('id').primaryKey().references(() => authUsers.id, { onDelete: 'cascade' }),
+  email: text().notNull().unique(), // ❌ Duplicado de auth.users.email
+  isPlatformAdmin: boolean('is_platform_admin').notNull().default(false),
+  ...auditFields,
+})
 ```
 
-**Tactical Design Requirement:**
-```
-User Entity (Domain Model):
-- Represents physical identity within system
-- Has is_platform_admin flag
-- If is_platform_admin=true: can access any organization (RLS bypass)
-- Linked to auth.users for authentication
-```
+**Problemas identificados:**
+1. `email` duplicado de `auth.users` — se o user mudar email pelo Supabase Auth, `public.users.email` fica desatualizado
+2. Tabela separada para dados que podem residir nativamente no Supabase via `app_metadata`
+3. Necessidade de `getUserProfileAction()` fazer query extra ao DB para obter `isPlatformAdmin`
 
-## Business Impact
+## Correção: Usar `app_metadata` do Supabase (Abordagem Recomendada)
 
-🔴 **BLOCKED FEATURES:**
-- Platform admin dashboard (super admin bypass)
-- Cross-organization admin operations
-- Support staff access to customer accounts
-- Compliance/audit log access
+O Supabase armazena dados controlados pelo servidor em `auth.users.raw_app_meta_data`. Este campo:
+- **É automaticamente incluído no JWT** — disponível via `auth.jwt()->'app_metadata'`
+- **Não é editável pelo usuário** — apenas via Admin API (`service_role`)
+- **Não requer tabela adicional** — zero duplicação
+- **Performance superior em RLS** — leitura do JWT, sem subquery em tabela
 
-## Recommendation
+### Referências: Supabase Best Practices aplicadas
 
-### Create User Entity & Schema
-
-```typescript
-// NEW: src/infra/db/schemas/user.ts
-
-export const usersTable = pgTable(
-  'users',
-  {
-    id: uuid('id').primaryKey(), // Same as auth.users.id
-    email: text('email').notNull().unique(),
-    isPlatformAdmin: boolean('is_platform_admin').notNull().default(false),
-    ...auditFields,
-  },
-  (table) => ({
-    emailIndex: index('idx_users_email').on(table.email),
-    platformAdminIndex: index('idx_users_is_platform_admin').on(table.isPlatformAdmin),
-  })
-);
-
-export type User = typeof usersTable.$inferSelect;
-export type UserInsert = typeof usersTable.$inferInsert;
-export type UserUpdate = typeof usersTable.$inferInsert;
-```
-
-### Create User Module
-
-```typescript
-// NEW: src/modules/user/schemas.ts
-export const userSelectSchema = createSelectSchema(usersTable);
-export const userCreateSchema = createInsertSchema(usersTable);
-export const userUpdateSchema = createUpdateSchema(usersTable);
-
-export type User = z.infer<typeof userSelectSchema>;
-
-// NEW: src/modules/user/repository/user.ts
-export interface IUserRepository {
-  create(input: UserInsert): Promise<User>;
-  findById(id: string): Promise<User | null>;
-  findByEmail(email: string): Promise<User | null>;
-  update(id: string, input: Partial<UserUpdate>): Promise<User>;
-  makePlatformAdmin(id: string): Promise<User>;
-  revokePlatformAdmin(id: string): Promise<User>;
-}
-
-export function userRepository(): IUserRepository {
-  return {
-    async create(input: UserInsert): Promise<User> {
-      return await db
-        .insert(usersTable)
-        .values(input)
-        .returning()
-        .then(rows => rows[0]);
-    },
-
-    async findById(id: string): Promise<User | null> {
-      return await db
-        .select()
-        .from(usersTable)
-        .where(eq(usersTable.id, id))
-        .then(rows => rows[0] ?? null);
-    },
-
-    async findByEmail(email: string): Promise<User | null> {
-      return await db
-        .select()
-        .from(usersTable)
-        .where(eq(usersTable.email, email))
-        .then(rows => rows[0] ?? null);
-    },
-
-    async update(id: string, input: Partial<UserUpdate>): Promise<User> {
-      return await db
-        .update(usersTable)
-        .set({ ...input, updatedAt: new Date() })
-        .where(eq(usersTable.id, id))
-        .returning()
-        .then(rows => rows[0]);
-    },
-
-    async makePlatformAdmin(id: string): Promise<User> {
-      return await this.update(id, { isPlatformAdmin: true });
-    },
-
-    async revokePlatformAdmin(id: string): Promise<User> {
-      return await this.update(id, { isPlatformAdmin: false });
-    },
-  };
-}
-```
-
-### Update Auth Sign-Up to Create User
-
-```typescript
-// src/modules/auth/actions/sign-up-action.ts (UPDATE)
-
-'use server';
-
-export async function signUpAction(input: SignUpInput): Promise<Result<AuthResponse>> {
-  try {
-    // Step 1: Create Supabase user
-    const { data, error } = await supabase.auth.signUp({
-      email: input.email,
-      password: input.password,
-    });
-
-    if (error || !data.user) {
-      return failure(DATABASE_ERROR, 'Failed to create user account');
-    }
-
-    // Step 2: Create domain User entity
-    const userResult = await userRepository().create({
-      id: data.user.id, // Link to auth user
-      email: data.user.email!,
-      isPlatformAdmin: false, // New users are never admin
-    });
-
-    if (!userResult) {
-      // If user creation fails, should delete auth user
-      // This is a transaction safety issue
-      return failure(DATABASE_ERROR, 'Failed to create user profile');
-    }
-
-    // Step 3: Onboard organization (from DDD-012)
-    const onboardingService = new OnboardingService(...);
-    const onboardResult = await onboardingService.onboardNewUser(
-      data.user.id,
-      input.organizationName,
-      input.organizationSlug,
-    );
-
-    if (isFailure(onboardResult)) {
-      return onboardResult;
-    }
-
-    return success({
-      user: userResult,
-      organization: onboardResult.data.organization,
-    });
-  } catch (error) {
-    return failure(UNKNOWN_ERROR, 'Signup failed');
-  }
-}
-```
-
-### RLS Policy for Platform Admin Bypass
-
+Per `security-rls-performance.md`:
 ```sql
--- Allow platform admin to access any organization
-CREATE POLICY admin_bypass_policy ON customers
-  FOR SELECT
+-- ✅ Correto: wrap em SELECT para caching (chamado 1x, não por row)
+USING ((select auth.jwt()->'app_metadata'->>'is_platform_admin')::boolean = true)
+
+-- ❌ Incorreto: chamado por row
+USING (auth.jwt()->'app_metadata'->>'is_platform_admin' = 'true')
+```
+
+Per `security-rls-basics.md`:
+```sql
+-- Policy para authenticated role com admin bypass
+CREATE POLICY admin_bypass ON {table}
+  FOR ALL
+  TO authenticated
   USING (
-    organization_id = current_setting('app.current_organization_id')::uuid
-    OR EXISTS (
-      SELECT 1 FROM users
-      WHERE users.id = auth.uid()
-      AND users.is_platform_admin = true
-    )
+    organization_id = (select auth.jwt()->'app_metadata'->>'organization_id')::uuid
+    OR (select auth.jwt()->'app_metadata'->>'is_platform_admin')::boolean = true
   );
 ```
 
-### Authorization Middleware
+## Implementação Corrigida
+
+### 1. Criar Supabase Admin Client
 
 ```typescript
-// NEW: src/shared/middleware/admin-context.ts
+// NEW: src/lib/supabase/admin.ts
+import { createClient } from '@supabase/supabase-js'
+import { env } from '@/infra/env'
 
-export async function getOrganizationContext(userId: string): Promise<{
-  organizationId: string | null;
-  isPlatformAdmin: boolean;
-}> {
-  const user = await userRepository().findById(userId);
-  if (!user) {
-    throw new Error('User not found');
-  }
+/**
+ * Supabase client com service_role key.
+ * Uso EXCLUSIVO para operações admin (set app_metadata, manage users).
+ * NUNCA expor ao client-side.
+ */
+export const supabaseAdmin = createClient(
+  env.NEXT_PUBLIC_SUPABASE_URL,
+  env.SUPABASE_SECRET_KEY,
+  { auth: { autoRefreshToken: false, persistSession: false } }
+)
+```
 
-  if (user.isPlatformAdmin) {
-    // Platform admin can access any org
-    // Next request should specify which org to access
-    return { organizationId: null, isPlatformAdmin: true };
-  }
+### 2. Remover tabela `public.users`
 
-  // Regular user: get their default organization
-  const membership = await memberRepository().findByUser(userId);
-  return {
-    organizationId: membership?.organizationId ?? null,
-    isPlatformAdmin: false,
-  };
+```sql
+-- Migration: drop duplicated users table
+DROP TABLE IF EXISTS public.users CASCADE;
+```
+
+### 3. User Entity como Value Object sobre auth.users
+
+```typescript
+// UPDATED: src/modules/user/types.ts
+// User entity derivado do Supabase auth — sem tabela própria
+export interface UserAuth {
+  id: string
+  email: string
+  name: string
+  isPlatformAdmin: boolean
+}
+
+// Para operações admin
+export interface SetPlatformAdminInput {
+  userId: string
+  isPlatformAdmin: boolean
 }
 ```
 
-## Database Migration
+### 4. User Repository como Adapter sobre Supabase Admin API
 
-```sql
--- Create users table linked to auth.users
-CREATE TABLE users (
-  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email text NOT NULL UNIQUE,
-  is_platform_admin boolean NOT NULL DEFAULT false,
-  created_at timestamp NOT NULL DEFAULT now(),
-  updated_at timestamp NOT NULL DEFAULT now()
-);
+```typescript
+// UPDATED: src/modules/user/repository/user-repository.ts
+import type { UserAuth, SetPlatformAdminInput } from '../types'
 
--- Create indexes
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_is_platform_admin ON users(is_platform_admin);
-
--- Auto-create user on auth signup (PostgreSQL trigger or via application)
+/**
+ * Repository para operações sobre o User entity.
+ * Diferente dos outros repos: não usa Drizzle/tabela própria.
+ * Wraps Supabase Admin API para gerenciar app_metadata.
+ */
+export interface UserRepository {
+  findById(id: string): Promise<UserAuth | null>
+  findByEmail(email: string): Promise<UserAuth | null>
+  makePlatformAdmin(id: string): Promise<void>
+  revokePlatformAdmin(id: string): Promise<void>
+  isPlatformAdmin(id: string): Promise<boolean>
+}
 ```
 
-## Files to Create
+```typescript
+// UPDATED: src/modules/user/repository/user-admin-repository.ts
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import type { UserAuth } from '../types'
+import type { UserRepository } from './user-repository'
 
-- `/src/infra/db/schemas/user.ts` - User schema
-- `/src/modules/user/schemas.ts` - Zod schemas
-- `/src/modules/user/types.ts` - Types
-- `/src/modules/user/repository/user-interface.ts` - Interface
-- `/src/modules/user/repository/user.ts` - Implementation
-- `/src/shared/middleware/admin-context.ts` - RLS context
-- New migration file
+export class UserAdminRepository implements UserRepository {
+  async findById(id: string): Promise<UserAuth | null> {
+    const { data, error } = await supabaseAdmin.auth.admin.getUserById(id)
+    if (error || !data.user) return null
 
-## Files to Update
+    return this.mapToUserAuth(data.user)
+  }
 
-- `/src/modules/auth/actions/sign-up-action.ts` - Create user entity
-- `/src/modules/auth/actions/sign-in-action.ts` - Maybe verify user exists
+  async findByEmail(email: string): Promise<UserAuth | null> {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers()
+    if (error) return null
 
-## Verification
+    const user = data.users.find(u => u.email === email)
+    return user ? this.mapToUserAuth(user) : null
+  }
 
-After implementation:
-1. ✅ User table created with proper foreign key to auth.users
-2. ✅ New users automatically created with is_platform_admin=false
-3. ✅ Platform admins can be marked in database
-4. ✅ RLS policies respect platform admin flag
-5. ✅ Auth sign-in works with new User entity
-6. ✅ No auth data leakage (user only sees domain User, not auth.users)
+  async makePlatformAdmin(id: string): Promise<void> {
+    await supabaseAdmin.auth.admin.updateUserById(id, {
+      app_metadata: { is_platform_admin: true },
+    })
+  }
 
-## Effort Estimate
+  async revokePlatformAdmin(id: string): Promise<void> {
+    await supabaseAdmin.auth.admin.updateUserById(id, {
+      app_metadata: { is_platform_admin: false },
+    })
+  }
 
-- Schema and repository: 4 hours
-- Auth integration: 4 hours
-- RLS policies: 3 hours
-- Middleware/context: 3 hours
-- Tests: 4 hours
-- **Total: ~18 hours**
+  async isPlatformAdmin(id: string): Promise<boolean> {
+    const { data } = await supabaseAdmin.auth.admin.getUserById(id)
+    return data?.user?.app_metadata?.is_platform_admin === true
+  }
+
+  private mapToUserAuth(user: { id: string; email?: string; user_metadata?: Record<string, unknown>; app_metadata?: Record<string, unknown> }): UserAuth {
+    return {
+      id: user.id,
+      email: user.email || '',
+      name: (user.user_metadata?.username as string) || user.email?.split('@')[0] || 'User',
+      isPlatformAdmin: user.app_metadata?.is_platform_admin === true,
+    }
+  }
+}
+
+export const userRepository = () => new UserAdminRepository()
+```
+
+### 5. Simplificar Auth Context — Ler do JWT
+
+```typescript
+// UPDATED: src/modules/auth/contexts/auth-context.tsx (trecho relevante)
+
+function mapSupabaseUserToAuthUser(user: UserSupabase | null): UserAuth | null {
+  if (!user) return null
+
+  const username = user.user_metadata?.username || user.email?.split('@')[0] || 'User'
+
+  return {
+    email: user.email || '',
+    id: user.id,
+    // ✅ Lê direto do app_metadata no JWT — sem query extra ao DB
+    isPlatformAdmin: user.app_metadata?.is_platform_admin === true,
+    name: username,
+  }
+}
+```
+
+```typescript
+// UPDATED: src/modules/auth/type.ts
+export interface UserSupabase {
+  id: string
+  email?: string
+  user_metadata?: Record<string, unknown> & { username?: string }
+  app_metadata?: Record<string, unknown> & { is_platform_admin?: boolean }
+}
+```
+
+**Eliminação de `getUserProfileAction`** — não mais necessário. O `isPlatformAdmin` vem direto do JWT/session user, sem roundtrip adicional ao DB.
+
+### 6. Simplificar Sign-Up — Sem criar User entity separado
+
+```typescript
+// UPDATED: src/modules/auth/actions/sign-up-action.ts (trecho relevante)
+// Remover a criação de domain User entity no signup:
+
+// ❌ REMOVER:
+// if (data.user) {
+//   await userRepository().create({ _id: data.user.id, email: ..., isPlatformAdmin: false })
+// }
+
+// ✅ Não precisa fazer nada extra — auth.users já foi criado pelo Supabase.
+// app_metadata.is_platform_admin defaults to null/undefined (= false).
+// Apenas admin explicitamente concede via userRepository().makePlatformAdmin(id).
+```
+
+### 7. RLS Policies com Admin Bypass
+
+```sql
+-- Helper function para verificar platform admin via JWT (performático)
+CREATE OR REPLACE FUNCTION public.is_platform_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT COALESCE(
+    (select current_setting('request.jwt.claims', true)::json->'app_metadata'->>'is_platform_admin')::boolean,
+    false
+  );
+$$;
+
+-- Policy padrão para tabelas com org scope + admin bypass
+-- Exemplo para customers:
+CREATE POLICY "org_isolation_with_admin_bypass" ON customers
+  FOR ALL
+  TO authenticated
+  USING (
+    organization_id = (select auth.jwt()->'app_metadata'->>'organization_id')::uuid
+    OR (select public.is_platform_admin())
+  );
+```
+
+### 8. Env Variable necessária
+
+```bash
+# .env.local — adicionar:
+SUPABASE_SECRET_KEY=your-service-role-key
+
+# src/infra/env/ — adicionar validação:
+SUPABASE_SECRET_KEY: z.string().min(1)
+```
+
+## Migration Plan
+
+### Migration 1: Drop `public.users` table
+```sql
+-- Reverter migration 0007_clear_the_professor.sql
+DROP INDEX IF EXISTS idx_users_email;
+DROP INDEX IF EXISTS idx_users_is_platform_admin;
+DROP TABLE IF EXISTS public.users CASCADE;
+```
+
+### Migration 2: Criar helper function para RLS
+```sql
+CREATE OR REPLACE FUNCTION public.is_platform_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT COALESCE(
+    (select current_setting('request.jwt.claims', true)::json->'app_metadata'->>'is_platform_admin')::boolean,
+    false
+  );
+$$;
+```
+
+### Seed: Marcar admin existente (se houver)
+```typescript
+// Via Supabase Dashboard ou script one-off:
+await supabaseAdmin.auth.admin.updateUserById('admin-user-uuid', {
+  app_metadata: { is_platform_admin: true },
+})
+```
+
+## Arquivos a Remover
+
+- `src/infra/db/schemas/user.ts` — tabela eliminada
+- `src/modules/auth/actions/get-user-profile-action.ts` — substituído por JWT claim
+- Migration `0007_clear_the_professor.sql` — reverter
+
+## Arquivos a Criar
+
+- `src/lib/supabase/admin.ts` — Admin client (service_role)
+- `src/modules/user/repository/user-admin-repository.ts` — Adapter sobre Supabase Admin API
+
+## Arquivos a Atualizar
+
+- `src/modules/user/types.ts` — Simplificar tipos
+- `src/modules/user/repository/user-repository.ts` — Interface atualizada
+- `src/modules/user/schemas.ts` — Remover dependência de usersTable
+- `src/modules/auth/type.ts` — Adicionar `app_metadata` ao `UserSupabase`
+- `src/modules/auth/contexts/auth-context.tsx` — Ler `isPlatformAdmin` do JWT
+- `src/modules/auth/actions/sign-up-action.ts` — Remover criação de domain User
+- `src/infra/env/` — Adicionar `SUPABASE_SECRET_KEY`
+- `src/infra/db/schemas/index.ts` — Remover export de `usersTable`
+
+## Verificação
+
+1. ✅ Sem tabela `public.users` — zero duplicação de dados
+2. ✅ `isPlatformAdmin` lido do JWT (app_metadata) — sem query extra
+3. ✅ Admin flag controlado exclusivamente via Supabase Admin API
+4. ✅ RLS policies com admin bypass performático (SELECT wrapper)
+5. ✅ Sign-up simplificado — Supabase auth cria tudo necessário
+6. ✅ `SUPABASE_SECRET_KEY` validada em env
+7. ✅ `pnpm build` compila sem erros
+
+## Comparativo: Antes vs Depois
+
+| Aspecto | Antes (incorreto) | Depois (corrigido) |
+|---|---|---|
+| Armazenamento | `public.users` table | `auth.users.app_metadata` |
+| Email | Duplicado | Lido de `auth.users` |
+| isPlatformAdmin | Query no DB | JWT claim (zero latência) |
+| Signup | Cria auth user + domain user | Apenas auth user |
+| RLS bypass | `EXISTS (SELECT FROM users)` | `auth.jwt()->'app_metadata'` |
+| Dependência | Drizzle ORM | Supabase Admin API |
+| Tabelas extras | 1 (`users`) | 0 |
+
+## Effort Estimate (revisado)
+
+- Admin client + env setup: 1 hora
+- Drop users table + migration: 1 hora
+- Refactor User module (repository adapter): 2 horas
+- Auth context simplification: 1 hora
+- RLS helper function: 1 hora
+- Tests: 2 horas
+- **Total: ~8 horas** (reduzido de 18h — escopo menor sem tabela)
 
 ## Related Issues
 
 - DDD-009: Missing organization_id (foundation)
-- DDD-012: Missing OnboardingService (uses user creation)
-- DDD-016: Missing BaseRepository (uses user context)
+- DDD-012: Missing OnboardingService (uses user context)
+- DDD-016: Missing BaseRepository (user context via JWT)
 
 ---
 
-## System Prompt RISE + Execução por Skill
+## System Prompt RISE + Execucao por Skill
 
 ### RISE Context
 
-- **Role:** Você é um DDD Tactical Designer & Supabase Auth specialist. Você cria entidades de domínio que complementam o auth provider externo (Supabase) sem duplicar responsabilidades.
-- **Instructions:** Crie a User Entity como modelo de domínio próprio, separado do auth.users do Supabase. A entity deve ter `is_platform_admin` para bypass RLS. Integre com o fluxo de signup existente.
-- **Steps:** 1) Criar schema Drizzle `usersTable` em `src/infra/db/schemas/user.ts`. 2) Criar módulo `src/modules/user/` completo (schemas, types, repository, actions, index). 3) Integrar com sign-up-action para criar User domain entity após auth signup. 4) Adicionar RLS bypass policy para platform admins. 5) Atualizar AuthContext para incluir isPlatformAdmin.
-- **Expectation:** User entity criado em signup, is_platform_admin funcional, platform admin pode bypassar RLS, módulo segue padrão de src/modules/product/.
+- **Role:** Voce e um Supabase Auth specialist & DDD adapter designer. Voce integra authorization claims nativos do Supabase (app_metadata/JWT) com a arquitetura DDD existente, sem duplicar dados do auth provider.
+- **Instructions:** Corrija a User Entity para usar `app_metadata` do Supabase em vez de tabela separada. Remova `public.users`, crie admin client, adapte repository para Supabase Admin API, simplifique auth context para ler do JWT.
+- **Steps:** 1) Criar `src/lib/supabase/admin.ts` com service_role client. 2) Adicionar `SUPABASE_SECRET_KEY` ao env validation. 3) Refatorar `UserRepository` como adapter sobre Supabase Admin API. 4) Atualizar `UserSupabase` type com `app_metadata`. 5) Simplificar `AuthContext` para ler `isPlatformAdmin` do JWT. 6) Remover `getUserProfileAction`. 7) Simplificar `signUpAction` (remover criacao de domain user). 8) Criar migration para drop `public.users`. 9) Criar `is_platform_admin()` SQL function para RLS. 10) Atualizar testes.
+- **Expectation:** Zero duplicacao de dados. `isPlatformAdmin` lido do JWT. Admin flag gerenciado via Supabase Admin API. RLS bypass performatico. `pnpm build` e `pnpm test` passam.
 
-### Execução
+### Execucao
 
-**Skill 1 de 2 — Entity & Module**
-```
-/antigravity-awesome-skills:ddd-tactical-patterns
-Role: DDD practitioner criando uma Entity de domínio (User) que complementa auth.users do Supabase.
-Instructions: Crie o módulo User completo seguindo o padrão canônico de src/modules/product/.
-Steps: 1) Crie src/infra/db/schemas/user.ts: usersTable com id (uuid PK referenciando auth.users.id via FK), email (text unique notNull), isPlatformAdmin (boolean notNull default false), auditFields. 2) Crie src/modules/user/schemas.ts com createSelectSchema, createInsertSchema, createUpdateSchema via drizzle-zod. 3) Crie src/modules/user/types.ts inferindo tipos dos schemas Zod. 4) Crie src/modules/user/repository/user-repository.ts (interface) + user-drizzle-repository.ts (implementação com factory). Interface: create, findById, findByEmail, update, makePlatformAdmin, revokePlatformAdmin. 5) Crie src/modules/user/index.ts com barrel exports.
-Expectation: Módulo user/ com mesma estrutura de product/. Repository funcional com Drizzle. Tipos type-safe. pnpm build compila.
-Referências: docs/tactical-design.md §2 (User entity). src/modules/product/ (padrão canônico). src/infra/db/helpers/audit-fields.ts.
-```
-
-**Skill 2 de 2 — Auth Integration**
+**Skill 1 de 3 -- Supabase Admin Setup**
 ```
 /antigravity-awesome-skills:nextjs-supabase-auth
-Role: Next.js + Supabase Auth specialist integrando domain User entity com auth flow existente.
-Instructions: Integre o novo módulo User com o signup e o AuthContext existentes.
-Steps: 1) Atualize src/modules/auth/actions/sign-up-action.ts: após supabase.auth.signUp() sucesso, chame userRepository().create({ id: data.user.id, email: data.user.email, isPlatformAdmin: false }). 2) Trate falha: se User creation falhar, log error (não delete auth user — recovery manual). 3) Atualize src/modules/auth/contexts/auth-context.tsx: adicione isPlatformAdmin ao tipo AuthUser. 4) Atualize mapSupabaseUserToAuthUser para buscar isPlatformAdmin da tabela users via server call. 5) Crie RLS bypass policy: CREATE POLICY admin_bypass ON {cada_tabela} FOR ALL USING (EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.is_platform_admin = true)).
-Expectation: Signup cria auth user + domain User atomicamente (best-effort). AuthContext expõe isPlatformAdmin. Platform admin bypassa RLS. Compatibilidade mantida com guards existentes (verify-session, useAuthGuard).
-Referências: docs/auth-context-implementation.md. src/modules/auth/contexts/auth-context.tsx. src/modules/auth/actions/sign-up-action.ts.
+Role: Supabase Admin API specialist configurando service_role client.
+Instructions: Crie o admin client e configure env validation.
+Steps: 1) Crie src/lib/supabase/admin.ts com createClient usando SUPABASE_SECRET_KEY. 2) Adicione SUPABASE_SECRET_KEY ao src/infra/env/ validation (z.string().min(1), server-only). 3) Verifique que o client NAO expoe ao browser (sem NEXT_PUBLIC_ prefix na key).
+Expectation: Admin client funcional, env validada, zero exposicao client-side.
+```
+
+**Skill 2 de 3 -- User Module Refactor**
+```
+/antigravity-awesome-skills:ddd-tactical-patterns
+Role: DDD adapter designer refatorando User module para wrapper sobre Supabase Admin API.
+Instructions: Refatore o modulo User para usar Supabase Admin API em vez de Drizzle ORM.
+Steps: 1) Atualize src/modules/user/types.ts (UserAuth, SetPlatformAdminInput). 2) Atualize src/modules/user/repository/user-repository.ts (interface sem create/delete). 3) Crie src/modules/user/repository/user-admin-repository.ts (implementacao via Supabase Admin API). 4) Remova src/infra/db/schemas/user.ts. 5) Atualize src/modules/user/schemas.ts (Zod schemas manuais, sem drizzle-zod). 6) Atualize barrel exports. 7) Remova src/modules/auth/actions/get-user-profile-action.ts.
+Expectation: User module funcional sem tabela propria. Repository adapter sobre Supabase Admin API. pnpm build compila.
+```
+
+**Skill 3 de 3 -- Auth Context + RLS + Migration**
+```
+/antigravity-awesome-skills:database-migration
+Role: Migration engineer + Auth integration specialist.
+Instructions: Simplifique auth context, crie migration para drop users table, configure RLS helper.
+Steps: 1) Atualize src/modules/auth/type.ts (adicionar app_metadata). 2) Atualize src/modules/auth/contexts/auth-context.tsx (ler isPlatformAdmin do session user.app_metadata). 3) Simplifique src/modules/auth/actions/sign-up-action.ts (remover criacao de domain user). 4) Gere migration via Drizzle para drop usersTable (remova do schema, pnpm db:generate). 5) Adicione manualmente is_platform_admin() SQL function na migration. 6) Valide com pnpm db:migrate local.
+Expectation: Auth context le do JWT. Signup simplificado. Migration drop users table + cria helper function. pnpm db:migrate passa.
 ```

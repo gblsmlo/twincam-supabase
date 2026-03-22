@@ -3,7 +3,6 @@
 import { makeSupabaseClient, makeSupabaseSession } from '@/lib/supabase/factories-client'
 import { useRouter } from 'next/navigation'
 import { createContext, type ReactNode, useCallback, useEffect, useState } from 'react'
-import { getUserProfileAction } from '../actions/get-user-profile-action'
 import { signOutAction } from '../actions/sign-out-action'
 import type { UserAuth, UserSupabase } from '../type'
 
@@ -18,10 +17,7 @@ interface AuthContextValue {
 
 export const AuthContext = createContext({} as AuthContextValue)
 
-function mapSupabaseUserToAuthUser(
-	user: UserSupabase | null,
-	isPlatformAdmin = false,
-): UserAuth | null {
+function mapSupabaseUserToAuthUser(user: UserSupabase | null): UserAuth | null {
 	if (!user) return null
 
 	const username = user.user_metadata?.username || user.email?.split('@')[0] || 'User'
@@ -29,7 +25,7 @@ function mapSupabaseUserToAuthUser(
 	return {
 		email: user.email || '',
 		id: user.id,
-		isPlatformAdmin,
+		isPlatformAdmin: user.app_metadata?.is_platform_admin === true,
 		name: username,
 	}
 }
@@ -45,16 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 			if (result.success) {
 				const { session } = result.data
-
-				let isPlatformAdmin = false
-				if (session?.user) {
-					const profileResult = await getUserProfileAction()
-					if (profileResult.success) {
-						isPlatformAdmin = profileResult.data.isPlatformAdmin
-					}
-				}
-
-				const authUser = mapSupabaseUserToAuthUser(session?.user || null, isPlatformAdmin)
+				const authUser = mapSupabaseUserToAuthUser(session?.user || null)
 				setUser(authUser)
 				setStatus(authUser ? 'authenticated' : 'unauthenticated')
 			}
@@ -91,9 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			data: { subscription },
 		} = supabase.auth.onAuthStateChange(async (_, session) => {
 			if (session?.user) {
-				const profileResult = await getUserProfileAction()
-				const isPlatformAdmin = profileResult.success ? profileResult.data.isPlatformAdmin : false
-				const authUser = mapSupabaseUserToAuthUser(session.user, isPlatformAdmin)
+				const authUser = mapSupabaseUserToAuthUser(session.user)
 				setUser(authUser)
 				setStatus('authenticated')
 			} else {

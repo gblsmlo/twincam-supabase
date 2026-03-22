@@ -1,6 +1,5 @@
 // Repository
-export * from './repository/user-drizzle-repository'
+export * from './repository/user-admin-repository'
 export * from './repository/user-repository'
-// Schemas & Types
-export * from './schemas'
+// Types
 export * from './types'

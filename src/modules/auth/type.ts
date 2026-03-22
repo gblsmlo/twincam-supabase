@@ -11,4 +11,7 @@ export interface UserSupabase {
 	user_metadata?: Record<string, unknown> & {
 		username?: string
 	}
+	app_metadata?: Record<string, unknown> & {
+		is_platform_admin?: boolean
+	}
 }
