@@ -39,6 +39,7 @@ function createMockRepo() {
 			),
 		),
 		delete: vi.fn().mockResolvedValue({ deletedId: 'member-target' }),
+		deleteIfNotLastOwner: vi.fn().mockResolvedValue({ deletedId: 'member-target' }),
 		findById: vi.fn().mockResolvedValue(null),
 		findByOrganizationId: vi.fn().mockResolvedValue([]),
 		findBySpaceId: vi.fn().mockResolvedValue([ownerMember, adminMember, targetMember]),
@@ -141,7 +142,7 @@ describe('MemberRoleService', () => {
 	})
 
 	describe('removeMember', () => {
-		it('should remove member when owner removes', async () => {
+		it('should remove member atomically when owner removes', async () => {
 			repo.findById.mockResolvedValue(targetMember)
 
 			const result = await service.removeMember(OWNER_USER_ID, SPACE_ID, 'member-target')
@@ -150,6 +151,7 @@ describe('MemberRoleService', () => {
 			if (result.success) {
 				expect(result.data.deletedId).toBe('member-target')
 			}
+			expect(repo.deleteIfNotLastOwner).toHaveBeenCalledWith('member-target', SPACE_ID)
 		})
 
 		it('should reject when actor lacks permission', async () => {
@@ -160,6 +162,19 @@ describe('MemberRoleService', () => {
 			expect(result.success).toBe(false)
 			if (!result.success) {
 				expect(result.type).toBe('AUTHORIZATION_ERROR')
+			}
+		})
+
+		it('should return validation error when atomic delete rejects last owner', async () => {
+			repo.findById.mockResolvedValue(targetMember)
+			repo.deleteIfNotLastOwner.mockResolvedValue(null)
+
+			const result = await service.removeMember(OWNER_USER_ID, SPACE_ID, 'member-target')
+
+			expect(result.success).toBe(false)
+			if (!result.success) {
+				expect(result.type).toBe('VALIDATION_ERROR')
+				expect(result.message).toContain('último proprietário')
 			}
 		})
 	})

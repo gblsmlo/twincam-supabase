@@ -98,7 +98,13 @@ export class MemberRoleService {
 		}
 
 		try {
-			const result = await this.memberRepository.delete(targetMemberId)
+			const result = await this.memberRepository.deleteIfNotLastOwner(targetMemberId, spaceId)
+			if (!result) {
+				return failure({
+					message: 'Não é possível remover o último proprietário do espaço.',
+					type: 'VALIDATION_ERROR',
+				})
+			}
 			return success(result)
 		} catch (error) {
 			return failure({

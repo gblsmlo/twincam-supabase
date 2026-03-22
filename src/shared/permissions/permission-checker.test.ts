@@ -32,6 +32,7 @@ function createMockRepo() {
 	return {
 		create: vi.fn(),
 		delete: vi.fn(),
+		deleteIfNotLastOwner: vi.fn(),
 		findById: vi.fn().mockResolvedValue(null),
 		findByOrganizationId: vi.fn().mockResolvedValue([]),
 		findBySpaceId: vi.fn().mockResolvedValue([ownerMember, adminMember, regularMember]),

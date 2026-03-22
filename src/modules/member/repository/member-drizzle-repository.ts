@@ -36,6 +36,39 @@ export class MemberDrizzleRepository extends BaseRepository implements MemberRep
 		}
 	}
 
+	async deleteIfNotLastOwner(id: string, spaceId: string): Promise<{ deletedId: string } | null> {
+		return await this.db.transaction(async (tx) => {
+			const target = await tx
+				.select()
+				.from(membersTable)
+				.where(this.withOrgFilter(membersTable.organizationId, eq(membersTable._id, id)))
+				.limit(1)
+
+			if (!target[0]) return null
+
+			if (target[0].role === 'owner') {
+				const owners = await tx
+					.select()
+					.from(membersTable)
+					.where(
+						this.withOrgFilter(
+							membersTable.organizationId,
+							and(eq(membersTable.spaceId, spaceId), eq(membersTable.role, 'owner')),
+						),
+					)
+
+				if (owners.length <= 1) return null
+			}
+
+			const [result] = await tx
+				.delete(membersTable)
+				.where(this.withOrgFilter(membersTable.organizationId, eq(membersTable._id, id)))
+				.returning({ deletedId: membersTable._id })
+
+			return result ? { deletedId: result.deletedId } : null
+		})
+	}
+
 	async findById(id: string): Promise<Member | null> {
 		const [result] = await this.db
 			.select()
