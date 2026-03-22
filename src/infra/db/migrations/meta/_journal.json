@@ -68,6 +68,13 @@
 			"when": 1774196393002,
 			"tag": "0009_solid_outlaw_kid",
 			"breakpoints": true
+		},
+		{
+			"idx": 10,
+			"version": "7",
+			"when": 1774208392714,
+			"tag": "0010_striped_kronos",
+			"breakpoints": true
 		}
 	],
 	"version": "7"
