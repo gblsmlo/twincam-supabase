@@ -12,7 +12,7 @@ export const getSortingStateParser = <TData>(columnIds?: string[] | Set<string>)
 	const validKeys = columnIds ? (columnIds instanceof Set ? columnIds : new Set(columnIds)) : null
 
 	return createParser({
-		eq: (a, b) =>
+		eq: (a: ExtendedColumnSort<TData>[], b: ExtendedColumnSort<TData>[]) =>
 			a.length === b.length &&
 			a.every((item, index) => item.id === b[index]?.id && item.desc === b[index]?.desc),
 		parse: (value) => {
@@ -49,7 +49,7 @@ export const getFiltersStateParser = <TData>(columnIds?: string[] | Set<string>)
 	const validKeys = columnIds ? (columnIds instanceof Set ? columnIds : new Set(columnIds)) : null
 
 	return createParser({
-		eq: (a, b) =>
+		eq: (a: ExtendedColumnFilter<TData>[], b: ExtendedColumnFilter<TData>[]) =>
 			a.length === b.length &&
 			a.every(
 				(filter, index) =>

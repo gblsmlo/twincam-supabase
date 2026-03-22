@@ -10,7 +10,7 @@ export type Failure<E = unknown> = {
 	success: false
 	type: (typeof errorType)[number]
 	message: string
-	error?: string | Error
+	error?: string
 	details?: E
 }
 
@@ -31,7 +31,7 @@ export const success = <T>(data: T, message?: string): Success<T> => ({
 type FailureProps<E> = {
 	type: (typeof errorType)[number]
 	message: string
-	error?: string | Error
+	error?: string
 	details?: E
 }
 

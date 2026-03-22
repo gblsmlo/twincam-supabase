@@ -13,7 +13,7 @@ export const memberInvitationsTable = pgTable(
 		organizationId: uuid('organization_id')
 			.notNull()
 			.references(() => spacesTable._id, { onDelete: 'cascade' }),
-		role: memberRoleEnum('role').notNull().default('MEMBER'),
+		role: memberRoleEnum('role').notNull().default('member'),
 		spaceId: uuid('space_id')
 			.notNull()
 			.references(() => spacesTable._id, { onDelete: 'cascade' }),

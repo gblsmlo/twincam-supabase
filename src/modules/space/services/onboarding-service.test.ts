@@ -146,7 +146,6 @@ describe('OnboardingService', () => {
 				slug: 'test-org',
 			})
 			expect(repos.memberRepository.create).toHaveBeenCalledWith({
-				organizationId: TEST_ORG_ID,
 				role: 'owner',
 				spaceId: TEST_ORG_ID,
 				userId: TEST_USER_ID,

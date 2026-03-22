@@ -6,6 +6,18 @@ import type { Member, MemberInvitation, MemberRole } from '../types'
 
 const INVITATION_EXPIRY_DAYS = 7
 
+type InviteParams = {
+	actorUserId: string
+	email: string
+	role: MemberRole
+	spaceId: string
+}
+
+type AcceptParams = {
+	invitationId: string
+	userId: string
+}
+
 export class MemberInvitationService {
 	private readonly permissionChecker: PermissionChecker
 
@@ -16,12 +28,12 @@ export class MemberInvitationService {
 		this.permissionChecker = new PermissionChecker(memberRepository)
 	}
 
-	async invite(
-		actorUserId: string,
-		spaceId: string,
-		email: string,
-		role: MemberRole,
-	): Promise<Result<MemberInvitation>> {
+	async invite({
+		actorUserId,
+		spaceId,
+		email,
+		role,
+	}: InviteParams): Promise<Result<MemberInvitation>> {
 		if (!email || !email.includes('@')) {
 			return failure({
 				message: 'E-mail inválido.',
@@ -67,7 +79,7 @@ export class MemberInvitationService {
 		}
 	}
 
-	async accept(invitationId: string, userId: string): Promise<Result<Member>> {
+	async accept({ invitationId, userId }: AcceptParams): Promise<Result<Member>> {
 		const invitation = await this.invitationRepository.findById(invitationId)
 		if (!invitation) {
 			return failure({

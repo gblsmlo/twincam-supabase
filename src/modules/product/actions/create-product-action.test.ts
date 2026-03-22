@@ -16,6 +16,7 @@ const mockProduct: Product = {
 	createdAt: new Date('2024-01-01T00:00:00Z'),
 	description: 'Test product description',
 	name: 'Test Product',
+	organizationId: null,
 	priceId: '550e8400-e29b-41d4-a716-446655440001',
 	updatedAt: new Date('2024-01-01T00:00:00Z'),
 }

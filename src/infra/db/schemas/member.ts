@@ -3,7 +3,7 @@ import { authUsers } from 'drizzle-orm/supabase'
 import { auditFields } from '../helpers'
 import { spacesTable } from './space'
 
-export const memberRoleEnum = pgEnum('member_role', ['ADMIN', 'MEMBER', 'OWNER'])
+export const memberRoleEnum = pgEnum('member_role', ['admin', 'member', 'owner'])
 
 export const membersTable = pgTable(
 	'members',
@@ -12,7 +12,7 @@ export const membersTable = pgTable(
 		organizationId: uuid('organization_id')
 			.notNull()
 			.references(() => spacesTable._id, { onDelete: 'cascade' }),
-		role: memberRoleEnum('role').notNull().default('MEMBER'),
+		role: memberRoleEnum('role').notNull().default('member'),
 		spaceId: uuid('space_id')
 			.notNull()
 			.references(() => spacesTable._id, { onDelete: 'cascade' }),

@@ -8,7 +8,7 @@ export class MemberInvitationDrizzleRepository
 	extends BaseRepository
 	implements MemberInvitationRepository
 {
-	async create(input: MemberInvitationInsert): Promise<MemberInvitation> {
+	async create(input: Omit<MemberInvitationInsert, 'organizationId'>): Promise<MemberInvitation> {
 		const [result] = await this.db
 			.insert(memberInvitationsTable)
 			.values(this.injectOrgId(input))

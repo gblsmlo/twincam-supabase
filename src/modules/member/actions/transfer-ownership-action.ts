@@ -35,7 +35,11 @@ export const transferOwnershipAction = async (
 	const repo = memberRepository(input.organizationId)
 	const service = new MemberRoleService(repo)
 
-	const result = await service.transferOwnership(user.id, input.spaceId, input.newOwnerMemberId)
+	const result = await service.transferOwnership({
+		actorUserId: user.id,
+		newOwnerMemberId: input.newOwnerMemberId,
+		spaceId: input.spaceId,
+	})
 
 	if (!result.success) {
 		return result

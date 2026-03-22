@@ -17,4 +17,4 @@ export type MemberInvitation = z.infer<typeof memberInvitationSelectSchema>
 export type MemberInvitationInsert = z.infer<typeof memberInvitationCreateSchema>
 export type MemberInvitationUpdate = z.infer<typeof memberInvitationUpdateSchema>
 
-export type MemberRoleType = z.infer<typeof memberRoleType>
+export type MemberRole = z.infer<typeof memberRoleType>

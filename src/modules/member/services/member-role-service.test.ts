@@ -80,7 +80,12 @@ describe('MemberRoleService', () => {
 				return Promise.resolve(null)
 			})
 
-			const result = await service.addMember(OWNER_USER_ID, SPACE_ID, newUserId, 'member')
+			const result = await service.addMember({
+				actorUserId: OWNER_USER_ID,
+				role: 'member',
+				spaceId: SPACE_ID,
+				targetUserId: newUserId,
+			})
 
 			expect(result.success).toBe(true)
 			if (result.success) {
@@ -94,7 +99,12 @@ describe('MemberRoleService', () => {
 		})
 
 		it('should reject when user is already a member', async () => {
-			const result = await service.addMember(OWNER_USER_ID, SPACE_ID, TARGET_USER_ID, 'member')
+			const result = await service.addMember({
+				actorUserId: OWNER_USER_ID,
+				role: 'member',
+				spaceId: SPACE_ID,
+				targetUserId: TARGET_USER_ID,
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -110,7 +120,12 @@ describe('MemberRoleService', () => {
 				return Promise.resolve(null)
 			})
 
-			const result = await service.addMember(TARGET_USER_ID, SPACE_ID, newUserId, 'member')
+			const result = await service.addMember({
+				actorUserId: TARGET_USER_ID,
+				role: 'member',
+				spaceId: SPACE_ID,
+				targetUserId: newUserId,
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -123,7 +138,12 @@ describe('MemberRoleService', () => {
 		it('should update role when owner changes member role', async () => {
 			repo.findById.mockResolvedValue(targetMember)
 
-			const result = await service.updateRole(OWNER_USER_ID, SPACE_ID, 'member-target', 'admin')
+			const result = await service.updateRole({
+				actorUserId: OWNER_USER_ID,
+				newRole: 'admin',
+				spaceId: SPACE_ID,
+				targetMemberId: 'member-target',
+			})
 
 			expect(result.success).toBe(true)
 			expect(repo.update).toHaveBeenCalledWith('member-target', { role: 'admin' })
@@ -132,7 +152,12 @@ describe('MemberRoleService', () => {
 		it('should reject when actor lacks permission', async () => {
 			repo.findById.mockResolvedValue(ownerMember)
 
-			const result = await service.updateRole(ADMIN_USER_ID, SPACE_ID, 'member-owner', 'member')
+			const result = await service.updateRole({
+				actorUserId: ADMIN_USER_ID,
+				newRole: 'member',
+				spaceId: SPACE_ID,
+				targetMemberId: 'member-owner',
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -145,7 +170,11 @@ describe('MemberRoleService', () => {
 		it('should remove member atomically when owner removes', async () => {
 			repo.findById.mockResolvedValue(targetMember)
 
-			const result = await service.removeMember(OWNER_USER_ID, SPACE_ID, 'member-target')
+			const result = await service.removeMember({
+				actorUserId: OWNER_USER_ID,
+				spaceId: SPACE_ID,
+				targetMemberId: 'member-target',
+			})
 
 			expect(result.success).toBe(true)
 			if (result.success) {
@@ -157,7 +186,11 @@ describe('MemberRoleService', () => {
 		it('should reject when actor lacks permission', async () => {
 			repo.findById.mockResolvedValue(targetMember)
 
-			const result = await service.removeMember(ADMIN_USER_ID, SPACE_ID, 'member-target')
+			const result = await service.removeMember({
+				actorUserId: ADMIN_USER_ID,
+				spaceId: SPACE_ID,
+				targetMemberId: 'member-target',
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -169,7 +202,11 @@ describe('MemberRoleService', () => {
 			repo.findById.mockResolvedValue(targetMember)
 			repo.deleteIfNotLastOwner.mockResolvedValue(null)
 
-			const result = await service.removeMember(OWNER_USER_ID, SPACE_ID, 'member-target')
+			const result = await service.removeMember({
+				actorUserId: OWNER_USER_ID,
+				spaceId: SPACE_ID,
+				targetMemberId: 'member-target',
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -183,7 +220,11 @@ describe('MemberRoleService', () => {
 		it('should transfer ownership: old owner becomes admin, new becomes owner', async () => {
 			repo.findById.mockResolvedValue(adminMember)
 
-			const result = await service.transferOwnership(OWNER_USER_ID, SPACE_ID, 'member-admin')
+			const result = await service.transferOwnership({
+				actorUserId: OWNER_USER_ID,
+				newOwnerMemberId: 'member-admin',
+				spaceId: SPACE_ID,
+			})
 
 			expect(result.success).toBe(true)
 			expect(repo.update).toHaveBeenCalledWith('member-admin', { role: 'owner' })
@@ -191,7 +232,11 @@ describe('MemberRoleService', () => {
 		})
 
 		it('should reject when actor is not owner', async () => {
-			const result = await service.transferOwnership(ADMIN_USER_ID, SPACE_ID, 'member-target')
+			const result = await service.transferOwnership({
+				actorUserId: ADMIN_USER_ID,
+				newOwnerMemberId: 'member-target',
+				spaceId: SPACE_ID,
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -202,7 +247,11 @@ describe('MemberRoleService', () => {
 		it('should reject transferring to self', async () => {
 			repo.findById.mockResolvedValue(ownerMember)
 
-			const result = await service.transferOwnership(OWNER_USER_ID, SPACE_ID, 'member-owner')
+			const result = await service.transferOwnership({
+				actorUserId: OWNER_USER_ID,
+				newOwnerMemberId: 'member-owner',
+				spaceId: SPACE_ID,
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {
@@ -214,7 +263,11 @@ describe('MemberRoleService', () => {
 		it('should reject when target member not found', async () => {
 			repo.findById.mockResolvedValue(null)
 
-			const result = await service.transferOwnership(OWNER_USER_ID, SPACE_ID, 'non-existent')
+			const result = await service.transferOwnership({
+				actorUserId: OWNER_USER_ID,
+				newOwnerMemberId: 'non-existent',
+				spaceId: SPACE_ID,
+			})
 
 			expect(result.success).toBe(false)
 			if (!result.success) {

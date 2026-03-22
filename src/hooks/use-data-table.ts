@@ -148,7 +148,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
 		sortKey,
 		getSortingStateParser<TData>(columnIds)
 			.withOptions(queryStateOptions)
-			.withDefault(initialState?.sorting ?? []),
+			.withDefault((initialState?.sorting ?? []) as ExtendedColumnSort<TData>[]),
 	)
 
 	const onSortingChange = React.useCallback(

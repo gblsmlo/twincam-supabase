@@ -24,6 +24,7 @@ function createMockSpaceRepository(): SpaceRepository {
 		create: vi.fn(),
 		delete: vi.fn(),
 		findAncestors: vi.fn(),
+		findById: vi.fn().mockResolvedValue(null),
 		findByOwnerId: vi.fn().mockResolvedValue(null),
 		findByParentId: vi.fn(),
 		findBySlug: vi.fn().mockResolvedValue(null),

@@ -5,7 +5,7 @@ import type { Member, MemberInsert, MemberUpdate } from '../types'
 import type { MemberRepository } from './member-repository'
 
 export class MemberDrizzleRepository extends BaseRepository implements MemberRepository {
-	async create(input: MemberInsert): Promise<Member> {
+	async create(input: Omit<MemberInsert, 'organizationId'>): Promise<Member> {
 		const [result] = await this.db.insert(membersTable).values(this.injectOrgId(input)).returning()
 
 		return result

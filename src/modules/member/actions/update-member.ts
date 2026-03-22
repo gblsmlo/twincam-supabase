@@ -35,7 +35,12 @@ export const updateMemberRoleAction = async (
 	const repo = memberRepository(input.organizationId)
 	const service = new MemberRoleService(repo)
 
-	const result = await service.updateRole(user.id, input.spaceId, input.memberId, input.newRole)
+	const result = await service.updateRole({
+		actorUserId: user.id,
+		newRole: input.newRole,
+		spaceId: input.spaceId,
+		targetMemberId: input.memberId,
+	})
 
 	if (!result.success) {
 		return result

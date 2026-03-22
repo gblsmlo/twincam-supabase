@@ -6,7 +6,7 @@ import type { Member, MemberInsert, MemberUpdate } from '../types'
  * at construction time via the factory function.
  */
 export interface MemberRepository {
-	create(input: MemberInsert): Promise<Member>
+	create(input: Omit<MemberInsert, 'organizationId'>): Promise<Member>
 	update(id: string, input: MemberUpdate): Promise<Member>
 	delete(id: string): Promise<{ deletedId: string }>
 	deleteIfNotLastOwner(id: string, spaceId: string): Promise<{ deletedId: string } | null>

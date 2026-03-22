@@ -37,7 +37,12 @@ export const inviteMemberAction = async (
 	const invitationRepo = memberInvitationRepository(input.organizationId)
 	const service = new MemberInvitationService(memberRepo, invitationRepo)
 
-	const result = await service.invite(user.id, input.spaceId, input.email, input.role)
+	const result = await service.invite({
+		actorUserId: user.id,
+		email: input.email,
+		role: input.role,
+		spaceId: input.spaceId,
+	})
 
 	if (!result.success) {
 		return result

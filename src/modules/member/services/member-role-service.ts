@@ -3,6 +3,32 @@ import { PermissionChecker } from '@/shared/permissions'
 import type { MemberRepository } from '../repository/member-repository'
 import type { Member, MemberRole } from '../types'
 
+type AddMemberParams = {
+	actorUserId: string
+	role: MemberRole
+	spaceId: string
+	targetUserId: string
+}
+
+type UpdateRoleParams = {
+	actorUserId: string
+	newRole: MemberRole
+	spaceId: string
+	targetMemberId: string
+}
+
+type RemoveMemberParams = {
+	actorUserId: string
+	spaceId: string
+	targetMemberId: string
+}
+
+type TransferOwnershipParams = {
+	actorUserId: string
+	newOwnerMemberId: string
+	spaceId: string
+}
+
 export class MemberRoleService {
 	private readonly permissionChecker: PermissionChecker
 
@@ -10,12 +36,12 @@ export class MemberRoleService {
 		this.permissionChecker = new PermissionChecker(memberRepository)
 	}
 
-	async addMember(
-		actorUserId: string,
-		spaceId: string,
-		targetUserId: string,
-		role: MemberRole,
-	): Promise<Result<Member>> {
+	async addMember({
+		actorUserId,
+		spaceId,
+		targetUserId,
+		role,
+	}: AddMemberParams): Promise<Result<Member>> {
 		const canInvite = await this.permissionChecker.canInviteMember(actorUserId, spaceId, role)
 		if (!canInvite) {
 			return failure({
@@ -49,12 +75,12 @@ export class MemberRoleService {
 		}
 	}
 
-	async updateRole(
-		actorUserId: string,
-		spaceId: string,
-		targetMemberId: string,
-		newRole: MemberRole,
-	): Promise<Result<Member>> {
+	async updateRole({
+		actorUserId,
+		spaceId,
+		targetMemberId,
+		newRole,
+	}: UpdateRoleParams): Promise<Result<Member>> {
 		const canUpdate = await this.permissionChecker.canUpdateRole(
 			actorUserId,
 			spaceId,
@@ -80,11 +106,11 @@ export class MemberRoleService {
 		}
 	}
 
-	async removeMember(
-		actorUserId: string,
-		spaceId: string,
-		targetMemberId: string,
-	): Promise<Result<{ deletedId: string }>> {
+	async removeMember({
+		actorUserId,
+		spaceId,
+		targetMemberId,
+	}: RemoveMemberParams): Promise<Result<{ deletedId: string }>> {
 		const canRemove = await this.permissionChecker.canRemoveMember(
 			actorUserId,
 			spaceId,
@@ -115,11 +141,11 @@ export class MemberRoleService {
 		}
 	}
 
-	async transferOwnership(
-		actorUserId: string,
-		spaceId: string,
-		newOwnerMemberId: string,
-	): Promise<Result<{ newOwner: Member; previousOwner: Member }>> {
+	async transferOwnership({
+		actorUserId,
+		spaceId,
+		newOwnerMemberId,
+	}: TransferOwnershipParams): Promise<Result<{ newOwner: Member; previousOwner: Member }>> {
 		const actor = await this.memberRepository.findByUserIdAndSpaceId(actorUserId, spaceId)
 		if (!actor || actor.role !== 'owner') {
 			return failure({

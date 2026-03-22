@@ -1,7 +1,7 @@
 import type { MemberInvitation, MemberInvitationInsert, MemberInvitationUpdate } from '../types'
 
 export interface MemberInvitationRepository {
-	create(input: MemberInvitationInsert): Promise<MemberInvitation>
+	create(input: Omit<MemberInvitationInsert, 'organizationId'>): Promise<MemberInvitation>
 	update(id: string, input: MemberInvitationUpdate): Promise<MemberInvitation>
 	delete(id: string): Promise<{ deletedId: string }>
 	findById(id: string): Promise<MemberInvitation | null>
