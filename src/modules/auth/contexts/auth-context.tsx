@@ -25,6 +25,7 @@ function mapSupabaseUserToAuthUser(user: UserSupabase | null): UserAuth | null {
 	return {
 		email: user.email || '',
 		id: user.id,
+		isPlatformAdmin: user.app_metadata?.is_platform_admin === true,
 		name: username,
 	}
 }
@@ -75,11 +76,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 		const {
 			data: { subscription },
-		} = supabase.auth.onAuthStateChange((_, session) => {
-			const authUser = mapSupabaseUserToAuthUser(session?.user || null)
-			setUser(authUser)
-
-			setStatus(authUser ? 'authenticated' : 'unauthenticated')
+		} = supabase.auth.onAuthStateChange(async (_, session) => {
+			if (session?.user) {
+				const authUser = mapSupabaseUserToAuthUser(session.user)
+				setUser(authUser)
+				setStatus('authenticated')
+			} else {
+				setUser(null)
+				setStatus('unauthenticated')
+			}
 		})
 
 		return () => {

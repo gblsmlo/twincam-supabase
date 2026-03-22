@@ -29,8 +29,7 @@ export const signUpAction = async (formData: SignUpFormData): Promise<Result<Sig
 			email: validated.data.email,
 			options: {
 				data: {
-					display_name: validated.data.name,
-					full_name: validated.data.name,
+					username: validated.data.name,
 				},
 				emailRedirectTo: REDIRECT_TO,
 			},
