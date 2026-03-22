@@ -1,4 +1,6 @@
+export * from './errors/value-errors'
 export * from './repository/member-drizzle-repository'
 export * from './repository/member-repository'
 export * from './schemas'
 export * from './types'
+export * from './value-objects/member-role'

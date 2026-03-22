@@ -1,5 +1,5 @@
 import type { MemberRepository } from '@/modules/member/repository/member-repository'
-import { canModifyRole, isRoleHigherOrEqual } from './role-hierarchy'
+import { Role } from '@/modules/member/value-objects/member-role'
 
 export class PermissionChecker {
 	constructor(private readonly memberRepository: MemberRepository) {}
@@ -12,9 +12,11 @@ export class PermissionChecker {
 		const actor = await this.findActorMember(actorUserId, spaceId)
 		if (!actor) return false
 
-		if (actor.role !== 'owner' && actor.role !== 'admin') return false
+		const actorRole = Role.fromType(actor.role)
+		if (!actorRole.canInvite()) return false
 
-		return isRoleHigherOrEqual(actor.role, targetRole)
+		const target = Role.from(targetRole)
+		return actorRole.isHigherOrEqual(target)
 	}
 
 	async canRemoveMember(
@@ -25,7 +27,8 @@ export class PermissionChecker {
 		const actor = await this.findActorMember(actorUserId, spaceId)
 		if (!actor) return false
 
-		if (actor.role !== 'owner') return false
+		const actorRole = Role.fromType(actor.role)
+		if (!actorRole.canRemove()) return false
 
 		const target = await this.memberRepository.findById(targetMemberId)
 		if (!target) return false
@@ -33,8 +36,12 @@ export class PermissionChecker {
 		// Cannot remove yourself
 		if (actor._id === target._id) return false
 
-		// Cannot remove last owner
-		if (target.role === 'owner') {
+		const targetRole = Role.fromType(target.role)
+
+		// Only owner can remove other owners
+		if (targetRole.equals(Role.fromType('owner'))) {
+			if (!actorRole.equals(Role.fromType('owner'))) return false
+
 			const isLast = await this.isLastOwner(spaceId)
 			if (isLast) return false
 		}
@@ -54,11 +61,15 @@ export class PermissionChecker {
 		const target = await this.memberRepository.findById(targetMemberId)
 		if (!target) return false
 
+		const actorRole = Role.fromType(actor.role)
+		const targetRole = Role.fromType(target.role)
+		const newMemberRole = Role.from(newRole)
+
 		// Must have higher role than target's current role
-		if (!canModifyRole(actor.role, target.role)) return false
+		if (!actorRole.isHigherThan(targetRole)) return false
 
 		// Cannot assign a role higher than own
-		if (!isRoleHigherOrEqual(actor.role, newRole)) return false
+		if (!actorRole.isHigherOrEqual(newMemberRole)) return false
 
 		return true
 	}
@@ -67,12 +78,14 @@ export class PermissionChecker {
 		const actor = await this.findActorMember(actorUserId, spaceId)
 		if (!actor) return false
 
-		return actor.role === 'owner'
+		const actorRole = Role.fromType(actor.role)
+		return actorRole.canDeleteOrganization()
 	}
 
 	async isLastOwner(spaceId: string): Promise<boolean> {
 		const members = await this.memberRepository.findBySpaceId(spaceId)
-		const owners = members.filter((m) => m.role === 'owner')
+		const ownerRole = Role.fromType('owner')
+		const owners = members.filter((m) => Role.fromType(m.role).equals(ownerRole))
 		return owners.length <= 1
 	}
 

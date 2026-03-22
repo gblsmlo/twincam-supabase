@@ -1,19 +1,31 @@
-import type { MemberRole } from '@/modules/member/types'
+import { Role } from '@/modules/member/value-objects/member-role'
 
-const ROLE_LEVELS: Record<MemberRole, number> = {
+const ROLE_LEVELS: Record<string, number> = {
 	admin: 2,
 	member: 1,
 	owner: 3,
 }
 
 export function getRoleLevel(role: string): number {
-	return ROLE_LEVELS[role as MemberRole] ?? 0
+	return ROLE_LEVELS[role] ?? 0
 }
 
 export function isRoleHigherOrEqual(actorRole: string, targetRole: string): boolean {
-	return getRoleLevel(actorRole) >= getRoleLevel(targetRole)
+	try {
+		const actor = Role.from(actorRole)
+		const target = Role.from(targetRole)
+		return actor.isHigherOrEqual(target)
+	} catch {
+		return false
+	}
 }
 
 export function canModifyRole(actorRole: string, targetRole: string): boolean {
-	return getRoleLevel(actorRole) > getRoleLevel(targetRole)
+	try {
+		const actor = Role.from(actorRole)
+		const target = Role.from(targetRole)
+		return actor.isHigherThan(target)
+	} catch {
+		return false
+	}
 }
