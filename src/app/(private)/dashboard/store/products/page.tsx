@@ -12,13 +12,16 @@ export default async function Page() {
 	const title = String(metadata.title)
 	const description = String(metadata.description)
 
+	// TODO(DDD-009): Replace with getCurrentOrganizationId() from auth context
+	const organizationId = ''
+
 	return (
 		<MainContent size="2xl">
 			<PageHeader>
 				<PageTitle>{title}</PageTitle>
 				<PageDescription>{description}</PageDescription>
 			</PageHeader>
-			<ProductsView />
+			<ProductsView organizationId={organizationId} />
 		</MainContent>
 	)
 }

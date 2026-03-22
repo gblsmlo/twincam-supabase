@@ -11,12 +11,14 @@ vi.mock('@/shared/errors/result', async () => {
 	return actual
 })
 
+const TEST_ORG_ID = '550e8400-e29b-41d4-a716-446655440099'
+
 const mockProduct: Product = {
 	_id: '550e8400-e29b-41d4-a716-446655440000',
 	createdAt: new Date('2024-01-01T00:00:00Z'),
 	description: 'Test product description',
 	name: 'Test Product',
-	organizationId: null,
+	organizationId: TEST_ORG_ID,
 	priceId: '550e8400-e29b-41d4-a716-446655440001',
 	updatedAt: new Date('2024-01-01T00:00:00Z'),
 }
@@ -40,7 +42,7 @@ describe('createProductAction', () => {
 			create: mockCreate,
 		} as any)
 
-		const result = await createProductAction(validInput)
+		const result = await createProductAction(TEST_ORG_ID, validInput)
 
 		expect(result.success).toBe(true)
 		if (result.success) {
@@ -55,7 +57,7 @@ describe('createProductAction', () => {
 			name: 123, // Should be string
 		} as any
 
-		const result = await createProductAction(invalidInput)
+		const result = await createProductAction(TEST_ORG_ID, invalidInput)
 
 		expect(result.success).toBe(false)
 		if (!result.success) {
@@ -72,7 +74,7 @@ describe('createProductAction', () => {
 			create: mockCreate,
 		} as any)
 
-		const result = await createProductAction(validInput)
+		const result = await createProductAction(TEST_ORG_ID, validInput)
 
 		expect(result.success).toBe(false)
 		if (!result.success) {
@@ -90,7 +92,7 @@ describe('createProductAction', () => {
 			create: mockCreate,
 		} as any)
 
-		const result = await createProductAction(validInput)
+		const result = await createProductAction(TEST_ORG_ID, validInput)
 
 		expect(result.success).toBe(false)
 		if (!result.success) {
@@ -112,7 +114,7 @@ describe('createProductAction', () => {
 			create: mockCreate,
 		} as any)
 
-		const result = await createProductAction(inputWithoutPrice as ProductInsert)
+		const result = await createProductAction(TEST_ORG_ID, inputWithoutPrice as ProductInsert)
 
 		expect(result.success).toBe(true)
 		if (result.success) {

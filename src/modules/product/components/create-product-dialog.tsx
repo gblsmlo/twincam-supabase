@@ -16,10 +16,11 @@ import { useId, useState, useTransition } from 'react'
 import { CreateProductForm } from '../forms'
 
 type CreateProductDialogProps = {
+	organizationId: string
 	trigger?: React.ReactNode
 }
 
-export function CreateProductDialog({ trigger }: CreateProductDialogProps) {
+export function CreateProductDialog({ organizationId, trigger }: CreateProductDialogProps) {
 	const [open, setOpen] = useState(false)
 	const [isPending] = useTransition()
 	const formId = useId()
@@ -46,7 +47,11 @@ export function CreateProductDialog({ trigger }: CreateProductDialogProps) {
 					</DialogDescription>
 				</DialogHeader>
 
-				<CreateProductForm onSuccess={handleSuccess} submitButtonId={formId} />
+				<CreateProductForm
+					onSuccess={handleSuccess}
+					organizationId={organizationId}
+					submitButtonId={formId}
+				/>
 
 				<DialogFooter>
 					<Button disabled={isPending} onClick={() => setOpen(false)} variant="outline">

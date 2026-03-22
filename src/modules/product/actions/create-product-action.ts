@@ -10,6 +10,7 @@ type CreateProductOutput = {
 }
 
 export const createProductAction = async (
+	organizationId: string,
 	formData: ProductInsert,
 ): Promise<Result<CreateProductOutput>> => {
 	const validated = productCreateSchema.safeParse(formData)
@@ -24,7 +25,7 @@ export const createProductAction = async (
 	}
 
 	try {
-		const repository = productRepository()
+		const repository = productRepository(organizationId)
 
 		const product = await repository.create(validated.data)
 
