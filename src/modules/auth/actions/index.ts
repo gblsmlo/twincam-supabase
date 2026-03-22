@@ -1,4 +1,5 @@
 export * from './get-auth-action'
+export * from './get-user-profile-action'
 export * from './recovery-password-action'
 export * from './sign-in-action'
 export * from './sign-out-action'

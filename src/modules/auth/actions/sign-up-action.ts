@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { userRepository } from '@/modules/user'
 import { failure, type Result, success } from '@/shared/errors/result'
 import { type SignUpFormData, signUpSchema } from '../schemas'
 
@@ -25,7 +26,7 @@ export const signUpAction = async (formData: SignUpFormData): Promise<Result<Sig
 	try {
 		const supabase = await createClient()
 
-		const { error: authError } = await supabase.auth.signUp({
+		const { data, error: authError } = await supabase.auth.signUp({
 			email: validated.data.email,
 			options: {
 				data: {
@@ -43,6 +44,18 @@ export const signUpAction = async (formData: SignUpFormData): Promise<Result<Sig
 				message: authError.message || 'Não foi possível criar a conta.',
 				type: 'AUTHORIZATION_ERROR',
 			})
+		}
+
+		if (data.user) {
+			try {
+				await userRepository().create({
+					_id: data.user.id,
+					email: data.user.email ?? validated.data.email,
+					isPlatformAdmin: false,
+				})
+			} catch (userError) {
+				console.error('Falha ao criar User entity no domínio:', userError)
+			}
 		}
 
 		return success({
