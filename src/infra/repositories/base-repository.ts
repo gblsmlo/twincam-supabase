@@ -12,6 +12,7 @@ export abstract class BaseRepository {
 		if (!organizationId) {
 			throw new Error('Organization ID is required for repository')
 		}
+
 		this.organizationId = organizationId
 		this.db = db
 	}
