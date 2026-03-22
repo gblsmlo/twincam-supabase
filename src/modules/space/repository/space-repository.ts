@@ -6,4 +6,7 @@ export interface SpaceRepository {
 	delete(id: string): Promise<{ deletedId: string }>
 	findByOwnerId(id: string): Promise<Space | null>
 	findBySlug(slug: string): Promise<Space | null>
+	findByParentId(parentId: string): Promise<Space[]>
+	findAncestors(id: string): Promise<Space[]>
+	findDescendants(id: string): Promise<Space[]>
 }
