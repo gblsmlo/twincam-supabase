@@ -13,5 +13,4 @@ export interface InvoiceRepository {
 	findBySubscriptionId(subscriptionId: string): Promise<Invoice[]>
 	findByOrganizationId(organizationId: string): Promise<Invoice[]>
 	findOverdue(): Promise<Invoice[]>
-	findLatestByCustomerId(customerId: string): Promise<Invoice | null>
 }

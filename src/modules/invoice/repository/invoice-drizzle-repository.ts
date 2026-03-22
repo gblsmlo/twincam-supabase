@@ -1,6 +1,6 @@
-import { db, invoicesTable, subscriptionsTable } from '@/infra/db'
+import { db, invoicesTable } from '@/infra/db'
 import { BaseRepository } from '@/infra/repositories'
-import { and, desc, eq, lt, ne } from 'drizzle-orm'
+import { and, eq, lt, ne } from 'drizzle-orm'
 import type { Invoice, InvoiceInsert, InvoiceUpdate } from '../types'
 import type { InvoiceRepository } from './invoice-repository'
 
@@ -77,34 +77,6 @@ export class InvoiceDrizzleRepository extends BaseRepository implements InvoiceR
 					and(ne(invoicesTable.status, 'paid'), lt(invoicesTable.dueDate, now)),
 				),
 			)
-	}
-
-	async findLatestByCustomerId(customerId: string): Promise<Invoice | null> {
-		const [result] = await this.db
-			.select({
-				_id: invoicesTable._id,
-				amount: invoicesTable.amount,
-				createdAt: invoicesTable.createdAt,
-				currency: invoicesTable.currency,
-				dueDate: invoicesTable.dueDate,
-				organizationId: invoicesTable.organizationId,
-				paidAt: invoicesTable.paidAt,
-				status: invoicesTable.status,
-				subscriptionId: invoicesTable.subscriptionId,
-				updatedAt: invoicesTable.updatedAt,
-			})
-			.from(invoicesTable)
-			.innerJoin(subscriptionsTable, eq(invoicesTable.subscriptionId, subscriptionsTable._id))
-			.where(
-				this.withOrgFilter(
-					invoicesTable.organizationId,
-					eq(subscriptionsTable.customerId, customerId),
-				),
-			)
-			.orderBy(desc(invoicesTable.createdAt))
-			.limit(1)
-
-		return result ?? null
 	}
 }
 
