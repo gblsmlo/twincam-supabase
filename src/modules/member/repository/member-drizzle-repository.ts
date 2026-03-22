@@ -1,6 +1,6 @@
 import { db, membersTable } from '@/infra/db'
 import { BaseRepository } from '@/infra/repositories'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import type { Member, MemberInsert, MemberUpdate } from '../types'
 import type { MemberRepository } from './member-repository'
 
@@ -51,6 +51,21 @@ export class MemberDrizzleRepository extends BaseRepository implements MemberRep
 			.select()
 			.from(membersTable)
 			.where(this.withOrgFilter(membersTable.organizationId, eq(membersTable.userId, userId)))
+	}
+
+	async findByUserIdAndSpaceId(userId: string, spaceId: string): Promise<Member | null> {
+		const [result] = await this.db
+			.select()
+			.from(membersTable)
+			.where(
+				this.withOrgFilter(
+					membersTable.organizationId,
+					and(eq(membersTable.userId, userId), eq(membersTable.spaceId, spaceId)),
+				),
+			)
+			.limit(1)
+
+		return result ?? null
 	}
 
 	async findBySpaceId(spaceId: string): Promise<Member[]> {

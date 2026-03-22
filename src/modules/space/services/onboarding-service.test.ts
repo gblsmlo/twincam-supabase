@@ -82,6 +82,7 @@ function createMockRepos() {
 			findByOrganizationId: vi.fn(),
 			findBySpaceId: vi.fn(),
 			findByUserId: vi.fn(),
+			findByUserIdAndSpaceId: vi.fn(),
 			update: vi.fn(),
 		} satisfies Record<keyof MemberRepository, unknown>,
 		spaceRepository: {

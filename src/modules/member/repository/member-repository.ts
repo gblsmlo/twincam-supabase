@@ -11,6 +11,7 @@ export interface MemberRepository {
 	delete(id: string): Promise<{ deletedId: string }>
 	findById(id: string): Promise<Member | null>
 	findByUserId(userId: string): Promise<Member[]>
+	findByUserIdAndSpaceId(userId: string, spaceId: string): Promise<Member | null>
 	findBySpaceId(spaceId: string): Promise<Member[]>
 	findByOrganizationId(organizationId: string): Promise<Member[]>
 }

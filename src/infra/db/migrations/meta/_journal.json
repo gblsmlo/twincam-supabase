@@ -46,8 +46,7 @@
 		{
 			"breakpoints": true,
 			"idx": 6,
-			"tag": "0006_add_organization_hierarchy",
-			"breakpoints": true
+			"tag": "0006_add_organization_hierarchy"
 		},
 		{
 			"idx": 7,
@@ -61,6 +60,13 @@
 			"version": "7",
 			"when": 1774187981489,
 			"tag": "0008_drop_users_table_use_app_metadata",
+			"breakpoints": true
+		},
+		{
+			"idx": 9,
+			"version": "7",
+			"when": 1774196393002,
+			"tag": "0009_solid_outlaw_kid",
 			"breakpoints": true
 		}
 	],

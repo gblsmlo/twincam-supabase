@@ -1,6 +1,7 @@
 export * from './schemas/customer'
 export * from './schemas/invoice'
 export * from './schemas/member'
+export * from './schemas/member-invitation'
 export * from './schemas/price'
 export * from './schemas/product'
 export * from './schemas/project'
