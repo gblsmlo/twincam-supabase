@@ -11,3 +11,4 @@ export const spaceUpdateSchema = createUpdateSchema(spacesTable).omit({
 	hierarchyLevel: true,
 	hierarchyPath: true,
 })
+export const spaceUpdateFullSchema = createUpdateSchema(spacesTable)
