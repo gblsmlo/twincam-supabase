@@ -1,19 +1,12 @@
-import { type Database, db, projectsTable } from '@/infra/db'
-import { and, eq } from 'drizzle-orm'
+import { db, projectsTable } from '@/infra/db'
+import { BaseRepository } from '@/infra/repositories'
+import { eq } from 'drizzle-orm'
 import type { Project, ProjectInsert, ProjectUpdate } from '../types'
 import type { ProjectRepository } from './project-repository'
 
-export class ProjectDrizzleRepository implements ProjectRepository {
-	constructor(
-		private db: Database,
-		private organizationId: string,
-	) {}
-
+export class ProjectDrizzleRepository extends BaseRepository implements ProjectRepository {
 	async create(input: ProjectInsert): Promise<Project> {
-		const [result] = await this.db
-			.insert(projectsTable)
-			.values({ ...input, organizationId: this.organizationId })
-			.returning()
+		const [result] = await this.db.insert(projectsTable).values(this.injectOrgId(input)).returning()
 
 		return result
 	}
@@ -27,7 +20,7 @@ export class ProjectDrizzleRepository implements ProjectRepository {
 		const [result] = await this.db
 			.update(projectsTable)
 			.set(update)
-			.where(and(eq(projectsTable._id, id), eq(projectsTable.organizationId, this.organizationId)))
+			.where(this.withOrgFilter(projectsTable.organizationId, eq(projectsTable._id, id)))
 
 		return result
 	}
@@ -35,7 +28,7 @@ export class ProjectDrizzleRepository implements ProjectRepository {
 	async delete(id: string): Promise<{ deletedId: string }> {
 		const [result] = await this.db
 			.delete(projectsTable)
-			.where(and(eq(projectsTable._id, id), eq(projectsTable.organizationId, this.organizationId)))
+			.where(this.withOrgFilter(projectsTable.organizationId, eq(projectsTable._id, id)))
 			.returning({ deletedId: projectsTable._id })
 
 		return {
@@ -47,61 +40,43 @@ export class ProjectDrizzleRepository implements ProjectRepository {
 		const [result] = await this.db
 			.select()
 			.from(projectsTable)
-			.where(and(eq(projectsTable._id, id), eq(projectsTable.organizationId, this.organizationId)))
+			.where(this.withOrgFilter(projectsTable.organizationId, eq(projectsTable._id, id)))
 			.limit(1)
 
 		return result ?? null
 	}
 
 	async findBySpaceId(spaceId: string): Promise<Project[]> {
-		const results = await this.db
+		return await this.db
 			.select()
 			.from(projectsTable)
-			.where(
-				and(
-					eq(projectsTable.spaceId, spaceId),
-					eq(projectsTable.organizationId, this.organizationId),
-				),
-			)
-
-		return results
+			.where(this.withOrgFilter(projectsTable.organizationId, eq(projectsTable.spaceId, spaceId)))
 	}
 
 	async findBySlug(slug: string): Promise<Project | null> {
 		const [result] = await this.db
 			.select()
 			.from(projectsTable)
-			.where(
-				and(eq(projectsTable.slug, slug), eq(projectsTable.organizationId, this.organizationId)),
-			)
+			.where(this.withOrgFilter(projectsTable.organizationId, eq(projectsTable.slug, slug)))
 			.limit(1)
 
 		return result ?? null
 	}
 
 	async findByOwnerId(ownerId: string): Promise<Project[]> {
-		const results = await this.db
+		return await this.db
 			.select()
 			.from(projectsTable)
-			.where(
-				and(
-					eq(projectsTable.ownerId, ownerId),
-					eq(projectsTable.organizationId, this.organizationId),
-				),
-			)
-
-		return results
+			.where(this.withOrgFilter(projectsTable.organizationId, eq(projectsTable.ownerId, ownerId)))
 	}
 
 	async findByOrganizationId(organizationId: string): Promise<Project[]> {
-		const results = await this.db
+		return await this.db
 			.select()
 			.from(projectsTable)
 			.where(eq(projectsTable.organizationId, organizationId))
-
-		return results
 	}
 }
 
 export const projectRepository = (organizationId: string) =>
-	new ProjectDrizzleRepository(db, organizationId)
+	new ProjectDrizzleRepository(organizationId, db)

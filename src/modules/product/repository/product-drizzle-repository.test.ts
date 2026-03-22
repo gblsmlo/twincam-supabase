@@ -64,7 +64,7 @@ describe('ProductDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.create(mockProductInsert)
 
@@ -88,21 +88,19 @@ describe('ProductDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.create(mockProductInsert)).rejects.toThrow(
 				'Database connection failed',
 			)
 		})
 
-		it('should create product without organizationId when no org context', async () => {
-			const globalProductInsert: ProductInsert = {
-				description: mockProduct.description,
-				name: mockProduct.name,
+		it('should override organizationId in input with the repository context', async () => {
+			const differentOrgInsert: ProductInsert = {
+				...mockProductInsert,
+				organizationId: 'different-org-id',
 			}
-			const globalProduct = { ...mockProduct, organizationId: null }
-
-			const mockReturning = vi.fn().mockResolvedValue([globalProduct])
+			const mockReturning = vi.fn().mockResolvedValue([mockProduct])
 			const mockValues = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockInsert = vi.fn().mockReturnValue({ values: mockValues })
 
@@ -110,12 +108,12 @@ describe('ProductDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
-			const result = await repository.create(globalProductInsert)
+			await repository.create(differentOrgInsert)
 
-			expect(result).toEqual(globalProduct)
-			expect(mockValues).toHaveBeenCalledWith(globalProductInsert)
+			const setCallArg = mockValues.mock.calls[0][0]
+			expect(setCallArg.organizationId).toBe(TEST_ORG_ID)
 		})
 	})
 
@@ -130,7 +128,7 @@ describe('ProductDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.update(mockProduct._id, mockProductUpdate)
 
@@ -158,7 +156,7 @@ describe('ProductDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await repository.update(mockProduct._id, mockProductUpdate)
 			const dateAfter = new Date()
@@ -179,7 +177,7 @@ describe('ProductDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.update(mockProduct._id, mockProductUpdate)).rejects.toThrow(
 				'Update failed',
@@ -195,7 +193,7 @@ describe('ProductDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.update('non-existent-id', mockProductUpdate)
 
@@ -213,7 +211,7 @@ describe('ProductDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.delete(mockProduct._id)
 
@@ -233,7 +231,7 @@ describe('ProductDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.delete(mockProduct._id)).rejects.toThrow('Delete failed')
 		})
@@ -247,7 +245,7 @@ describe('ProductDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.delete('non-existent-id')
 
@@ -266,7 +264,7 @@ describe('ProductDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findById(mockProduct._id)
 
@@ -287,7 +285,7 @@ describe('ProductDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findById('non-existent-id')
 
@@ -305,7 +303,7 @@ describe('ProductDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findById(mockProduct._id)).rejects.toThrow('Query failed')
 		})
@@ -321,7 +319,7 @@ describe('ProductDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByPriceId(mockProduct.priceId!)
 
@@ -340,7 +338,7 @@ describe('ProductDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByPriceId('non-existent-price')
 
@@ -357,7 +355,7 @@ describe('ProductDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findByPriceId(mockProduct.priceId!)).rejects.toThrow('Query failed')
 		})
@@ -376,7 +374,7 @@ describe('ProductDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByPriceId(mockProduct.priceId!)
 
@@ -395,7 +393,7 @@ describe('ProductDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByOrganizationId(TEST_ORG_ID)
 
@@ -414,7 +412,7 @@ describe('ProductDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByOrganizationId('non-existent-org')
 
@@ -432,7 +430,7 @@ describe('ProductDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findAll()
 
@@ -442,32 +440,16 @@ describe('ProductDrizzleRepository', () => {
 			expect(result).toEqual([mockProduct])
 		})
 
-		it('should find all global products when no org context', async () => {
-			const mockFrom = vi.fn().mockResolvedValue([mockProduct])
-			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
-
-			mockDb = {
-				select: mockSelect,
-			} as unknown as Database
-
-			repository = new ProductDrizzleRepository(mockDb)
-
-			const result = await repository.findAll()
-
-			expect(mockSelect).toHaveBeenCalled()
-			expect(mockFrom).toHaveBeenCalledWith(productsTable)
-			expect(result).toEqual([mockProduct])
-		})
-
 		it('should return empty array when no products exist', async () => {
-			const mockFrom = vi.fn().mockResolvedValue([])
+			const mockWhere = vi.fn().mockResolvedValue([])
+			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
 			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
 
 			mockDb = {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findAll()
 
@@ -476,14 +458,15 @@ describe('ProductDrizzleRepository', () => {
 
 		it('should propagate error when query fails', async () => {
 			const dbError = new Error('Query failed')
-			const mockFrom = vi.fn().mockRejectedValue(dbError)
+			const mockWhere = vi.fn().mockRejectedValue(dbError)
+			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
 			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
 
 			mockDb = {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findAll()).rejects.toThrow('Query failed')
 		})
@@ -499,14 +482,15 @@ describe('ProductDrizzleRepository', () => {
 				_id: '550e8400-e29b-41d4-a716-446655440303',
 				name: 'Third Product',
 			}
-			const mockFrom = vi.fn().mockResolvedValue([mockProduct, secondProduct, thirdProduct])
+			const mockWhere = vi.fn().mockResolvedValue([mockProduct, secondProduct, thirdProduct])
+			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
 			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
 
 			mockDb = {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProductDrizzleRepository(mockDb)
+			repository = new ProductDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findAll()
 

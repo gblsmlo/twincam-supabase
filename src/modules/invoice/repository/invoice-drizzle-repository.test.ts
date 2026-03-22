@@ -75,7 +75,7 @@ describe('InvoiceDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.create(mockInvoiceInsert)
 
@@ -99,7 +99,7 @@ describe('InvoiceDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.create(mockInvoiceInsert)).rejects.toThrow(
 				'Database connection failed',
@@ -119,7 +119,7 @@ describe('InvoiceDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await repository.create(differentOrgInsert)
 
@@ -139,7 +139,7 @@ describe('InvoiceDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.update(mockInvoice._id, mockInvoiceUpdate)
 
@@ -167,7 +167,7 @@ describe('InvoiceDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await repository.update(mockInvoice._id, mockInvoiceUpdate)
 			const dateAfter = new Date()
@@ -188,7 +188,7 @@ describe('InvoiceDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.update(mockInvoice._id, mockInvoiceUpdate)).rejects.toThrow(
 				'Update failed',
@@ -204,7 +204,7 @@ describe('InvoiceDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.update('non-existent-id', mockInvoiceUpdate)
 
@@ -222,7 +222,7 @@ describe('InvoiceDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.delete(mockInvoice._id)
 
@@ -242,7 +242,7 @@ describe('InvoiceDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.delete(mockInvoice._id)).rejects.toThrow('Delete failed')
 		})
@@ -256,7 +256,7 @@ describe('InvoiceDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.delete('non-existent-id')
 
@@ -275,7 +275,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findById(mockInvoice._id)
 
@@ -296,7 +296,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findById('non-existent-id')
 
@@ -314,7 +314,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findById(mockInvoice._id)).rejects.toThrow('Query failed')
 		})
@@ -331,7 +331,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findBySubscriptionId(mockInvoice.subscriptionId)
 
@@ -351,7 +351,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findBySubscriptionId('non-existent-subscription')
 
@@ -368,7 +368,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findBySubscriptionId(mockInvoice.subscriptionId)).rejects.toThrow(
 				'Query failed',
@@ -391,7 +391,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findOverdue()
 
@@ -410,7 +410,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findOverdue()
 
@@ -426,7 +426,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findOverdue()
 
@@ -444,7 +444,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findOverdue()).rejects.toThrow('Query failed')
 		})
@@ -463,7 +463,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findLatestByCustomerId('customer-id')
 
@@ -488,7 +488,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findLatestByCustomerId('non-existent-customer')
 
@@ -508,7 +508,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findLatestByCustomerId('customer-id')).rejects.toThrow('Query failed')
 		})
@@ -525,7 +525,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await repository.findLatestByCustomerId('customer-id')
 

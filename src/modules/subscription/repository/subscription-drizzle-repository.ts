@@ -1,18 +1,17 @@
-import { type Database, db, subscriptionsTable } from '@/infra/db'
+import { db, subscriptionsTable } from '@/infra/db'
+import { BaseRepository } from '@/infra/repositories'
 import { and, eq } from 'drizzle-orm'
 import type { Subscription, SubscriptionInsert, SubscriptionUpdate } from '../types'
 import type { SubscriptionRepository } from './subscription-repository'
 
-export class SubscriptionDrizzleRepository implements SubscriptionRepository {
-	constructor(
-		private db: Database,
-		private organizationId: string,
-	) {}
-
+export class SubscriptionDrizzleRepository
+	extends BaseRepository
+	implements SubscriptionRepository
+{
 	async create(input: SubscriptionInsert): Promise<Subscription> {
 		const [result] = await this.db
 			.insert(subscriptionsTable)
-			.values({ ...input, organizationId: this.organizationId })
+			.values(this.injectOrgId(input))
 			.returning()
 
 		return result
@@ -27,12 +26,7 @@ export class SubscriptionDrizzleRepository implements SubscriptionRepository {
 		const [result] = await this.db
 			.update(subscriptionsTable)
 			.set(update)
-			.where(
-				and(
-					eq(subscriptionsTable._id, id),
-					eq(subscriptionsTable.organizationId, this.organizationId),
-				),
-			)
+			.where(this.withOrgFilter(subscriptionsTable.organizationId, eq(subscriptionsTable._id, id)))
 
 		return result
 	}
@@ -40,12 +34,7 @@ export class SubscriptionDrizzleRepository implements SubscriptionRepository {
 	async delete(id: string): Promise<{ deletedId: string }> {
 		const [result] = await this.db
 			.delete(subscriptionsTable)
-			.where(
-				and(
-					eq(subscriptionsTable._id, id),
-					eq(subscriptionsTable.organizationId, this.organizationId),
-				),
-			)
+			.where(this.withOrgFilter(subscriptionsTable.organizationId, eq(subscriptionsTable._id, id)))
 			.returning({ deletedId: subscriptionsTable._id })
 
 		return {
@@ -57,12 +46,7 @@ export class SubscriptionDrizzleRepository implements SubscriptionRepository {
 		const [result] = await this.db
 			.select()
 			.from(subscriptionsTable)
-			.where(
-				and(
-					eq(subscriptionsTable._id, id),
-					eq(subscriptionsTable.organizationId, this.organizationId),
-				),
-			)
+			.where(this.withOrgFilter(subscriptionsTable.organizationId, eq(subscriptionsTable._id, id)))
 			.limit(1)
 
 		return result ?? null
@@ -73,9 +57,9 @@ export class SubscriptionDrizzleRepository implements SubscriptionRepository {
 			.select()
 			.from(subscriptionsTable)
 			.where(
-				and(
+				this.withOrgFilter(
+					subscriptionsTable.organizationId,
 					eq(subscriptionsTable.customerId, customerId),
-					eq(subscriptionsTable.organizationId, this.organizationId),
 				),
 			)
 	}
@@ -85,10 +69,12 @@ export class SubscriptionDrizzleRepository implements SubscriptionRepository {
 			.select()
 			.from(subscriptionsTable)
 			.where(
-				and(
-					eq(subscriptionsTable.customerId, customerId),
-					eq(subscriptionsTable.status, 'active'),
-					eq(subscriptionsTable.organizationId, this.organizationId),
+				this.withOrgFilter(
+					subscriptionsTable.organizationId,
+					and(
+						eq(subscriptionsTable.customerId, customerId),
+						eq(subscriptionsTable.status, 'active'),
+					),
 				),
 			)
 			.limit(1)
@@ -101,9 +87,9 @@ export class SubscriptionDrizzleRepository implements SubscriptionRepository {
 			.select()
 			.from(subscriptionsTable)
 			.where(
-				and(
+				this.withOrgFilter(
+					subscriptionsTable.organizationId,
 					eq(subscriptionsTable.status, status),
-					eq(subscriptionsTable.organizationId, this.organizationId),
 				),
 			)
 	}
@@ -117,4 +103,4 @@ export class SubscriptionDrizzleRepository implements SubscriptionRepository {
 }
 
 export const subscriptionRepository = (organizationId: string) =>
-	new SubscriptionDrizzleRepository(db, organizationId)
+	new SubscriptionDrizzleRepository(organizationId, db)

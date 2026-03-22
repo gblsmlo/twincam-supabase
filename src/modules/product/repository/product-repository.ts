@@ -1,10 +1,9 @@
 import type { Product, ProductInsert, ProductUpdate } from '../types'
 
 /**
- * Repository optionally scoped to a specific organization.
- * When an organizationId is provided at construction time via the factory function,
- * all queries are filtered by that organization.
- * When no organizationId is provided, global (non-tenant-scoped) products are returned.
+ * Repository scoped to a specific organization.
+ * All queries are automatically filtered by the organizationId provided
+ * at construction time via the factory function.
  */
 export interface ProductRepository {
 	create(input: ProductInsert): Promise<Product>

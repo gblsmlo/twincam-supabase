@@ -70,7 +70,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.create(mockSubscriptionInsert)
 
@@ -94,7 +94,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.create(mockSubscriptionInsert)).rejects.toThrow(
 				'Database connection failed',
@@ -115,7 +115,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await repository.create(differentOrgInsert)
 
@@ -135,7 +135,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.update(mockSubscription._id, mockSubscriptionUpdate)
 
@@ -163,7 +163,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await repository.update(mockSubscription._id, mockSubscriptionUpdate)
 			const dateAfter = new Date()
@@ -184,7 +184,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.update(mockSubscription._id, mockSubscriptionUpdate)).rejects.toThrow(
 				'Update failed',
@@ -200,7 +200,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.update('non-existent-id', mockSubscriptionUpdate)
 
@@ -218,7 +218,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.delete(mockSubscription._id)
 
@@ -238,7 +238,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.delete(mockSubscription._id)).rejects.toThrow('Delete failed')
 		})
@@ -252,7 +252,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.delete('non-existent-id')
 
@@ -271,7 +271,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findById(mockSubscription._id)
 
@@ -292,7 +292,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findById('non-existent-id')
 
@@ -310,7 +310,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findById(mockSubscription._id)).rejects.toThrow('Query failed')
 		})
@@ -330,7 +330,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByCustomerId(mockSubscription.customerId)
 
@@ -350,7 +350,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByCustomerId('non-existent-customer')
 
@@ -367,7 +367,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findByCustomerId(mockSubscription.customerId)).rejects.toThrow(
 				'Query failed',
@@ -386,7 +386,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findActiveByCustomerId(mockSubscription.customerId)
 
@@ -407,7 +407,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findActiveByCustomerId('customer-without-active-subscription')
 
@@ -425,7 +425,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findActiveByCustomerId(mockSubscription.customerId)).rejects.toThrow(
 				'Query failed',
@@ -444,7 +444,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByStatus('active')
 
@@ -464,7 +464,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByStatus('canceled')
 
@@ -481,7 +481,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByStatus('past_due')
 
@@ -497,7 +497,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByStatus('past_due')
 
@@ -514,7 +514,7 @@ describe('SubscriptionDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SubscriptionDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new SubscriptionDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findByStatus('active')).rejects.toThrow('Query failed')
 		})
