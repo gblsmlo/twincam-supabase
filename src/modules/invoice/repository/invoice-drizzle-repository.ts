@@ -1,19 +1,12 @@
-import { type Database, db, invoicesTable, subscriptionsTable } from '@/infra/db'
+import { db, invoicesTable, subscriptionsTable } from '@/infra/db'
+import { BaseRepository } from '@/infra/repositories'
 import { and, desc, eq, lt, ne } from 'drizzle-orm'
 import type { Invoice, InvoiceInsert, InvoiceUpdate } from '../types'
 import type { InvoiceRepository } from './invoice-repository'
 
-export class InvoiceDrizzleRepository implements InvoiceRepository {
-	constructor(
-		private db: Database,
-		private organizationId: string,
-	) {}
-
+export class InvoiceDrizzleRepository extends BaseRepository implements InvoiceRepository {
 	async create(input: InvoiceInsert): Promise<Invoice> {
-		const [result] = await this.db
-			.insert(invoicesTable)
-			.values({ ...input, organizationId: this.organizationId })
-			.returning()
+		const [result] = await this.db.insert(invoicesTable).values(this.injectOrgId(input)).returning()
 
 		return result
 	}
@@ -27,7 +20,7 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 		const [result] = await this.db
 			.update(invoicesTable)
 			.set(update)
-			.where(and(eq(invoicesTable._id, id), eq(invoicesTable.organizationId, this.organizationId)))
+			.where(this.withOrgFilter(invoicesTable.organizationId, eq(invoicesTable._id, id)))
 
 		return result
 	}
@@ -35,7 +28,7 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 	async delete(id: string): Promise<{ deletedId: string }> {
 		const [result] = await this.db
 			.delete(invoicesTable)
-			.where(and(eq(invoicesTable._id, id), eq(invoicesTable.organizationId, this.organizationId)))
+			.where(this.withOrgFilter(invoicesTable.organizationId, eq(invoicesTable._id, id)))
 			.returning({ deletedId: invoicesTable._id })
 
 		return {
@@ -47,7 +40,7 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 		const [result] = await this.db
 			.select()
 			.from(invoicesTable)
-			.where(and(eq(invoicesTable._id, id), eq(invoicesTable.organizationId, this.organizationId)))
+			.where(this.withOrgFilter(invoicesTable.organizationId, eq(invoicesTable._id, id)))
 			.limit(1)
 
 		return result ?? null
@@ -58,9 +51,9 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 			.select()
 			.from(invoicesTable)
 			.where(
-				and(
+				this.withOrgFilter(
+					invoicesTable.organizationId,
 					eq(invoicesTable.subscriptionId, subscriptionId),
-					eq(invoicesTable.organizationId, this.organizationId),
 				),
 			)
 	}
@@ -79,10 +72,9 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 			.select()
 			.from(invoicesTable)
 			.where(
-				and(
-					ne(invoicesTable.status, 'paid'),
-					lt(invoicesTable.dueDate, now),
-					eq(invoicesTable.organizationId, this.organizationId),
+				this.withOrgFilter(
+					invoicesTable.organizationId,
+					and(ne(invoicesTable.status, 'paid'), lt(invoicesTable.dueDate, now)),
 				),
 			)
 	}
@@ -104,9 +96,9 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 			.from(invoicesTable)
 			.innerJoin(subscriptionsTable, eq(invoicesTable.subscriptionId, subscriptionsTable._id))
 			.where(
-				and(
+				this.withOrgFilter(
+					invoicesTable.organizationId,
 					eq(subscriptionsTable.customerId, customerId),
-					eq(invoicesTable.organizationId, this.organizationId),
 				),
 			)
 			.orderBy(desc(invoicesTable.createdAt))
@@ -117,4 +109,4 @@ export class InvoiceDrizzleRepository implements InvoiceRepository {
 }
 
 export const invoiceRepository = (organizationId: string) =>
-	new InvoiceDrizzleRepository(db, organizationId)
+	new InvoiceDrizzleRepository(organizationId, db)

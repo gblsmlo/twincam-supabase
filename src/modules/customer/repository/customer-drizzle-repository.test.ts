@@ -64,7 +64,7 @@ describe('CustomerDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.create(mockCustomerInsert)
 
@@ -88,7 +88,7 @@ describe('CustomerDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.create(mockCustomerInsert)).rejects.toThrow(
 				'Database connection failed',
@@ -108,7 +108,7 @@ describe('CustomerDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await repository.create(differentOrgInsert)
 
@@ -128,7 +128,7 @@ describe('CustomerDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.update(mockCustomer._id, mockCustomerUpdate)
 
@@ -156,7 +156,7 @@ describe('CustomerDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await repository.update(mockCustomer._id, mockCustomerUpdate)
 			const dateAfter = new Date()
@@ -177,7 +177,7 @@ describe('CustomerDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.update(mockCustomer._id, mockCustomerUpdate)).rejects.toThrow(
 				'Update failed',
@@ -193,7 +193,7 @@ describe('CustomerDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.update('non-existent-id', mockCustomerUpdate)
 
@@ -211,7 +211,7 @@ describe('CustomerDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.delete(mockCustomer._id)
 
@@ -231,7 +231,7 @@ describe('CustomerDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.delete(mockCustomer._id)).rejects.toThrow('Delete failed')
 		})
@@ -245,7 +245,7 @@ describe('CustomerDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.delete('non-existent-id')
 
@@ -264,7 +264,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findById(mockCustomer._id)
 
@@ -285,7 +285,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findById('non-existent-id')
 
@@ -303,7 +303,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findById(mockCustomer._id)).rejects.toThrow('Query failed')
 		})
@@ -320,7 +320,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByEmail(mockCustomer.email)
 
@@ -341,7 +341,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByEmail('nonexistent@example.com')
 
@@ -359,7 +359,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findByEmail(mockCustomer.email)).rejects.toThrow('Query failed')
 		})
@@ -379,7 +379,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findBySpaceId(mockCustomer.spaceId)
 
@@ -399,7 +399,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findBySpaceId('non-existent-space')
 
@@ -416,7 +416,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findBySpaceId(mockCustomer.spaceId)).rejects.toThrow('Query failed')
 		})
@@ -433,7 +433,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByOrganizationId(TEST_ORG_ID)
 
@@ -452,7 +452,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByOrganizationId('non-existent-org')
 
@@ -471,7 +471,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findAllByStatus('active')
 
@@ -491,7 +491,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findAllByStatus('inactive')
 
@@ -507,7 +507,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findAllByStatus('inactive')
 
@@ -524,7 +524,7 @@ describe('CustomerDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new CustomerDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new CustomerDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findAllByStatus('active')).rejects.toThrow('Query failed')
 		})

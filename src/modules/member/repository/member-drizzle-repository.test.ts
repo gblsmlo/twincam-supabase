@@ -61,7 +61,7 @@ describe('MemberDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.create(mockMemberInsert)
 
@@ -86,7 +86,7 @@ describe('MemberDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.create(mockMemberInsert)).rejects.toThrow(
 				'Database connection failed',
@@ -107,7 +107,7 @@ describe('MemberDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await repository.create(differentOrgInsert)
 
@@ -127,7 +127,7 @@ describe('MemberDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.update(mockMember._id, mockMemberUpdate)
 
@@ -154,7 +154,7 @@ describe('MemberDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await repository.update(mockMember._id, mockMemberUpdate)
 			const dateAfter = new Date()
@@ -175,7 +175,7 @@ describe('MemberDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.update(mockMember._id, mockMemberUpdate)).rejects.toThrow(
 				'Update failed',
@@ -191,7 +191,7 @@ describe('MemberDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.update('non-existent-id', mockMemberUpdate)
 
@@ -209,7 +209,7 @@ describe('MemberDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.delete(mockMember._id)
 
@@ -229,7 +229,7 @@ describe('MemberDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.delete(mockMember._id)).rejects.toThrow('Delete failed')
 		})
@@ -243,7 +243,7 @@ describe('MemberDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.delete('non-existent-id')
 
@@ -262,7 +262,7 @@ describe('MemberDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findById(mockMember._id)
 
@@ -283,7 +283,7 @@ describe('MemberDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findById('non-existent-id')
 
@@ -301,7 +301,7 @@ describe('MemberDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findById(mockMember._id)).rejects.toThrow('Query failed')
 		})
@@ -317,7 +317,7 @@ describe('MemberDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByUserId(mockMember.userId)
 
@@ -336,7 +336,7 @@ describe('MemberDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByUserId('non-existent-user')
 
@@ -353,7 +353,7 @@ describe('MemberDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findByUserId(mockMember.userId)).rejects.toThrow('Query failed')
 		})
@@ -369,7 +369,7 @@ describe('MemberDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findBySpaceId(mockMember.spaceId)
 
@@ -388,7 +388,7 @@ describe('MemberDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findBySpaceId('non-existent-space')
 
@@ -405,7 +405,7 @@ describe('MemberDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findBySpaceId(mockMember.spaceId)).rejects.toThrow('Query failed')
 		})
@@ -424,7 +424,7 @@ describe('MemberDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findBySpaceId(mockMember.spaceId)
 
@@ -443,7 +443,7 @@ describe('MemberDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByOrganizationId(TEST_ORG_ID)
 
@@ -462,7 +462,7 @@ describe('MemberDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new MemberDrizzleRepository(mockDb, TEST_ORG_ID)
+			repository = new MemberDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			const result = await repository.findByOrganizationId('non-existent-org')
 
