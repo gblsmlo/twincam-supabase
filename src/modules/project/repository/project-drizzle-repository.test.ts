@@ -3,9 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/infra/db', () => ({
 	db: {},
 	projectsTable: {
+		_id: 'mock-_id',
 		description: 'mock-description',
-		id: 'mock-id',
 		name: 'mock-name',
+		organizationId: 'mock-organizationId',
 		ownerId: 'mock-ownerId',
 		slug: 'mock-slug',
 		spaceId: 'mock-spaceId',
@@ -17,11 +18,14 @@ import { projectsTable } from '@/infra/db'
 import type { Project, ProjectInsert, ProjectUpdate } from '../types'
 import { ProjectDrizzleRepository } from './project-drizzle-repository'
 
+const TEST_ORG_ID = '550e8400-e29b-41d4-a716-446655440099'
+
 const mockProject: Project = {
 	_id: '550e8400-e29b-41d4-a716-446655440200',
 	createdAt: new Date(),
 	description: 'Test project description',
 	name: 'Test Project',
+	organizationId: TEST_ORG_ID,
 	ownerId: '550e8400-e29b-41d4-a716-446655440001',
 	slug: 'test-project',
 	spaceId: '550e8400-e29b-41d4-a716-446655440000',
@@ -29,9 +33,9 @@ const mockProject: Project = {
 }
 
 const mockProjectInsert: ProjectInsert = {
-	_id: mockProject._id,
 	description: mockProject.description,
 	name: mockProject.name,
+	organizationId: mockProject.organizationId,
 	ownerId: mockProject.ownerId,
 	slug: mockProject.slug,
 	spaceId: mockProject.spaceId,
@@ -56,61 +60,64 @@ describe('ProjectDrizzleRepository', () => {
 
 	describe('create', () => {
 		it('should create a new project successfully', async () => {
-			const mockValues = vi.fn().mockResolvedValue([mockProject])
+			const mockReturning = vi.fn().mockResolvedValue([mockProject])
+			const mockValues = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockInsert = vi.fn().mockReturnValue({ values: mockValues })
 
 			mockDb = {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.create(mockProjectInsert)
 
 			expect(mockInsert).toHaveBeenCalledWith(projectsTable)
-			expect(mockValues).toHaveBeenCalledWith(mockProjectInsert)
+			expect(mockValues).toHaveBeenCalledWith(
+				expect.objectContaining({
+					name: mockProjectInsert.name,
+					organizationId: TEST_ORG_ID,
+				}),
+			)
 			expect(result).toEqual(mockProject)
 		})
 
 		it('should propagate error when database fails', async () => {
 			const dbError = new Error('Database connection failed')
-			const mockValues = vi.fn().mockRejectedValue(dbError)
+			const mockReturning = vi.fn().mockRejectedValue(dbError)
+			const mockValues = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockInsert = vi.fn().mockReturnValue({ values: mockValues })
 
 			mockDb = {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.create(mockProjectInsert)).rejects.toThrow(
 				'Database connection failed',
 			)
 		})
 
-		it('should create project with only required fields', async () => {
-			const minimalInsert: ProjectInsert = {
-				_id: mockProject._id,
-				name: mockProject.name,
-				ownerId: mockProject.ownerId,
-				slug: mockProject.slug,
-				spaceId: mockProject.spaceId,
+		it('should override organizationId in input with the repository context', async () => {
+			const differentOrgInsert: ProjectInsert = {
+				...mockProjectInsert,
+				organizationId: 'different-org-id',
 			}
-			const minimalProject = { ...mockProject, description: null }
-
-			const mockValues = vi.fn().mockResolvedValue([minimalProject])
+			const mockReturning = vi.fn().mockResolvedValue([mockProject])
+			const mockValues = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockInsert = vi.fn().mockReturnValue({ values: mockValues })
 
 			mockDb = {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			const result = await repository.create(minimalInsert)
+			await repository.create(differentOrgInsert)
 
-			expect(result).toEqual(minimalProject)
-			expect(mockValues).toHaveBeenCalledWith(minimalInsert)
+			const setCallArg = mockValues.mock.calls[0][0]
+			expect(setCallArg.organizationId).toBe(TEST_ORG_ID)
 		})
 	})
 
@@ -125,7 +132,7 @@ describe('ProjectDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.update(mockProject._id, mockProjectUpdate)
 
@@ -153,7 +160,7 @@ describe('ProjectDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await repository.update(mockProject._id, mockProjectUpdate)
 			const dateAfter = new Date()
@@ -174,7 +181,7 @@ describe('ProjectDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.update(mockProject._id, mockProjectUpdate)).rejects.toThrow(
 				'Update failed',
@@ -190,7 +197,7 @@ describe('ProjectDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.update('non-existent-id', mockProjectUpdate)
 
@@ -208,7 +215,7 @@ describe('ProjectDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.delete(mockProject._id)
 
@@ -228,7 +235,7 @@ describe('ProjectDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.delete(mockProject._id)).rejects.toThrow('Delete failed')
 		})
@@ -242,7 +249,7 @@ describe('ProjectDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.delete('non-existent-id')
 
@@ -261,7 +268,7 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findById(mockProject._id)
 
@@ -272,7 +279,7 @@ describe('ProjectDrizzleRepository', () => {
 			expect(result).toEqual(mockProject)
 		})
 
-		it('should return undefined when no project is found', async () => {
+		it('should return null when no project is found', async () => {
 			const mockLimit = vi.fn().mockResolvedValue([])
 			const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit })
 			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
@@ -282,11 +289,11 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findById('non-existent-id')
 
-			expect(result).toBeUndefined()
+			expect(result).toBeNull()
 		})
 
 		it('should propagate error when query fails', async () => {
@@ -300,7 +307,7 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.findById(mockProject._id)).rejects.toThrow('Query failed')
 		})
@@ -316,7 +323,7 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findBySpaceId(mockProject.spaceId)
 
@@ -335,7 +342,7 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findBySpaceId('non-existent-space')
 
@@ -352,7 +359,7 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.findBySpaceId(mockProject.spaceId)).rejects.toThrow('Query failed')
 		})
@@ -362,6 +369,7 @@ describe('ProjectDrizzleRepository', () => {
 				...mockProject,
 				_id: '550e8400-e29b-41d4-a716-446655440201',
 				name: 'Second Project',
+				organizationId: TEST_ORG_ID,
 				slug: 'second-project',
 			}
 			const mockWhere = vi.fn().mockResolvedValue([mockProject, secondProject])
@@ -372,7 +380,7 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findBySpaceId(mockProject.spaceId)
 
@@ -392,7 +400,7 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findBySlug(mockProject.slug)
 
@@ -403,7 +411,7 @@ describe('ProjectDrizzleRepository', () => {
 			expect(result).toEqual(mockProject)
 		})
 
-		it('should return undefined when slug is not found', async () => {
+		it('should return null when slug is not found', async () => {
 			const mockLimit = vi.fn().mockResolvedValue([])
 			const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit })
 			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
@@ -413,11 +421,11 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findBySlug('non-existent-slug')
 
-			expect(result).toBeUndefined()
+			expect(result).toBeNull()
 		})
 
 		it('should propagate error when query fails', async () => {
@@ -431,7 +439,7 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.findBySlug(mockProject.slug)).rejects.toThrow('Query failed')
 		})
@@ -447,7 +455,7 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findByOwnerId(mockProject.ownerId)
 
@@ -466,7 +474,7 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findByOwnerId('non-existent-owner')
 
@@ -483,7 +491,7 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.findByOwnerId(mockProject.ownerId)).rejects.toThrow('Query failed')
 		})
@@ -504,12 +512,49 @@ describe('ProjectDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new ProjectDrizzleRepository(mockDb)
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findByOwnerId(mockProject.ownerId)
 
 			expect(result).toHaveLength(2)
 			expect(result).toEqual([mockProject, secondProject])
+		})
+	})
+
+	describe('findByOrganizationId', () => {
+		it('should find all projects for an organization', async () => {
+			const mockWhere = vi.fn().mockResolvedValue([mockProject])
+			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+
+			mockDb = {
+				select: mockSelect,
+			} as unknown as Database
+
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
+
+			const result = await repository.findByOrganizationId(TEST_ORG_ID)
+
+			expect(mockSelect).toHaveBeenCalled()
+			expect(mockFrom).toHaveBeenCalledWith(projectsTable)
+			expect(mockWhere).toHaveBeenCalled()
+			expect(result).toEqual([mockProject])
+		})
+
+		it('should return empty array when no projects found for organization', async () => {
+			const mockWhere = vi.fn().mockResolvedValue([])
+			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
+			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
+
+			mockDb = {
+				select: mockSelect,
+			} as unknown as Database
+
+			repository = new ProjectDrizzleRepository(mockDb, TEST_ORG_ID)
+
+			const result = await repository.findByOrganizationId('non-existent-org')
+
+			expect(result).toEqual([])
 		})
 	})
 })

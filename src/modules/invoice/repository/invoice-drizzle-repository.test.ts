@@ -3,19 +3,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('@/infra/db', () => ({
 	db: {},
 	invoicesTable: {
+		_id: 'mock-_id',
 		amount: 'mock-amount',
 		createdAt: 'mock-createdAt',
 		currency: 'mock-currency',
 		dueDate: 'mock-dueDate',
-		id: 'mock-id',
+		organizationId: 'mock-organizationId',
 		paidAt: 'mock-paidAt',
 		status: 'mock-status',
 		subscriptionId: 'mock-subscriptionId',
 		updatedAt: 'mock-updatedAt',
 	},
 	subscriptionsTable: {
+		_id: 'mock-subscription-_id',
 		customerId: 'mock-customerId',
-		id: 'mock-subscription-id',
+		organizationId: 'mock-subscription-organizationId',
 	},
 }))
 
@@ -24,12 +26,15 @@ import { invoicesTable, subscriptionsTable } from '@/infra/db'
 import type { Invoice, InvoiceInsert, InvoiceUpdate } from '../types'
 import { InvoiceDrizzleRepository } from './invoice-drizzle-repository'
 
+const TEST_ORG_ID = '550e8400-e29b-41d4-a716-446655440099'
+
 const mockInvoice: Invoice = {
+	_id: '550e8400-e29b-41d4-a716-446655440000',
 	amount: '99.99',
 	createdAt: new Date(),
 	currency: 'BRL',
 	dueDate: new Date('2025-02-15'),
-	id: '550e8400-e29b-41d4-a716-446655440000',
+	organizationId: TEST_ORG_ID,
 	paidAt: null,
 	status: 'open',
 	subscriptionId: '550e8400-e29b-41d4-a716-446655440001',
@@ -39,7 +44,7 @@ const mockInvoice: Invoice = {
 const mockInvoiceInsert: InvoiceInsert = {
 	amount: mockInvoice.amount,
 	dueDate: mockInvoice.dueDate,
-	id: mockInvoice.id,
+	organizationId: mockInvoice.organizationId,
 	subscriptionId: mockInvoice.subscriptionId,
 }
 
@@ -62,60 +67,64 @@ describe('InvoiceDrizzleRepository', () => {
 
 	describe('create', () => {
 		it('should create a new invoice successfully', async () => {
-			const mockValues = vi.fn().mockResolvedValue([mockInvoice])
+			const mockReturning = vi.fn().mockResolvedValue([mockInvoice])
+			const mockValues = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockInsert = vi.fn().mockReturnValue({ values: mockValues })
 
 			mockDb = {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.create(mockInvoiceInsert)
 
 			expect(mockInsert).toHaveBeenCalledWith(invoicesTable)
-			expect(mockValues).toHaveBeenCalledWith(mockInvoiceInsert)
+			expect(mockValues).toHaveBeenCalledWith(
+				expect.objectContaining({
+					amount: mockInvoiceInsert.amount,
+					organizationId: TEST_ORG_ID,
+				}),
+			)
 			expect(result).toEqual(mockInvoice)
 		})
 
 		it('should propagate error when database fails', async () => {
 			const dbError = new Error('Database connection failed')
-			const mockValues = vi.fn().mockRejectedValue(dbError)
+			const mockReturning = vi.fn().mockRejectedValue(dbError)
+			const mockValues = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockInsert = vi.fn().mockReturnValue({ values: mockValues })
 
 			mockDb = {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.create(mockInvoiceInsert)).rejects.toThrow(
 				'Database connection failed',
 			)
 		})
 
-		it('should create invoice with only required fields', async () => {
-			const minimalInsert: InvoiceInsert = {
-				amount: mockInvoice.amount,
-				dueDate: mockInvoice.dueDate,
-				id: mockInvoice.id,
-				subscriptionId: mockInvoice.subscriptionId,
+		it('should override organizationId in input with the repository context', async () => {
+			const differentOrgInsert: InvoiceInsert = {
+				...mockInvoiceInsert,
+				organizationId: 'different-org-id',
 			}
-			const minimalInvoice = { ...mockInvoice }
-
-			const mockValues = vi.fn().mockResolvedValue([minimalInvoice])
+			const mockReturning = vi.fn().mockResolvedValue([mockInvoice])
+			const mockValues = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockInsert = vi.fn().mockReturnValue({ values: mockValues })
 
 			mockDb = {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			const result = await repository.create(minimalInsert)
+			await repository.create(differentOrgInsert)
 
-			expect(result).toEqual(minimalInvoice)
-			expect(mockValues).toHaveBeenCalledWith(minimalInsert)
+			const setCallArg = mockValues.mock.calls[0][0]
+			expect(setCallArg.organizationId).toBe(TEST_ORG_ID)
 		})
 	})
 
@@ -130,9 +139,9 @@ describe('InvoiceDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			const result = await repository.update(mockInvoice.id, mockInvoiceUpdate)
+			const result = await repository.update(mockInvoice._id, mockInvoiceUpdate)
 
 			expect(mockUpdate).toHaveBeenCalledWith(invoicesTable)
 			expect(mockSet).toHaveBeenCalled()
@@ -158,9 +167,9 @@ describe('InvoiceDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			await repository.update(mockInvoice.id, mockInvoiceUpdate)
+			await repository.update(mockInvoice._id, mockInvoiceUpdate)
 			const dateAfter = new Date()
 
 			const setCallArg = mockSet.mock.calls[0][0]
@@ -179,9 +188,9 @@ describe('InvoiceDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			await expect(repository.update(mockInvoice.id, mockInvoiceUpdate)).rejects.toThrow(
+			await expect(repository.update(mockInvoice._id, mockInvoiceUpdate)).rejects.toThrow(
 				'Update failed',
 			)
 		})
@@ -195,7 +204,7 @@ describe('InvoiceDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.update('non-existent-id', mockInvoiceUpdate)
 
@@ -205,7 +214,7 @@ describe('InvoiceDrizzleRepository', () => {
 
 	describe('delete', () => {
 		it('should delete an invoice successfully and return deletedId', async () => {
-			const mockReturning = vi.fn().mockResolvedValue([{ deletedId: mockInvoice.id }])
+			const mockReturning = vi.fn().mockResolvedValue([{ deletedId: mockInvoice._id }])
 			const mockWhere = vi.fn().mockReturnValue({ returning: mockReturning })
 			const mockDelete = vi.fn().mockReturnValue({ where: mockWhere })
 
@@ -213,14 +222,14 @@ describe('InvoiceDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			const result = await repository.delete(mockInvoice.id)
+			const result = await repository.delete(mockInvoice._id)
 
 			expect(mockDelete).toHaveBeenCalledWith(invoicesTable)
 			expect(mockWhere).toHaveBeenCalled()
 			expect(mockReturning).toHaveBeenCalled()
-			expect(result).toEqual({ deletedId: mockInvoice.id })
+			expect(result).toEqual({ deletedId: mockInvoice._id })
 		})
 
 		it('should propagate error when deletion fails', async () => {
@@ -233,9 +242,9 @@ describe('InvoiceDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			await expect(repository.delete(mockInvoice.id)).rejects.toThrow('Delete failed')
+			await expect(repository.delete(mockInvoice._id)).rejects.toThrow('Delete failed')
 		})
 
 		it('should handle attempt to delete non-existent record', async () => {
@@ -247,7 +256,7 @@ describe('InvoiceDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.delete('non-existent-id')
 
@@ -266,9 +275,9 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			const result = await repository.findById(mockInvoice.id)
+			const result = await repository.findById(mockInvoice._id)
 
 			expect(mockSelect).toHaveBeenCalled()
 			expect(mockFrom).toHaveBeenCalledWith(invoicesTable)
@@ -277,7 +286,7 @@ describe('InvoiceDrizzleRepository', () => {
 			expect(result).toEqual(mockInvoice)
 		})
 
-		it('should return undefined when invoice is not found', async () => {
+		it('should return null when invoice is not found', async () => {
 			const mockLimit = vi.fn().mockResolvedValue([])
 			const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit })
 			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
@@ -287,11 +296,11 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findById('non-existent-id')
 
-			expect(result).toBeUndefined()
+			expect(result).toBeNull()
 		})
 
 		it('should propagate error when query fails', async () => {
@@ -305,15 +314,15 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
-			await expect(repository.findById(mockInvoice.id)).rejects.toThrow('Query failed')
+			await expect(repository.findById(mockInvoice._id)).rejects.toThrow('Query failed')
 		})
 	})
 
 	describe('findBySubscriptionId', () => {
 		it('should find all invoices by subscriptionId successfully', async () => {
-			const mockInvoices = [mockInvoice, { ...mockInvoice, amount: '199.99', id: 'another-id' }]
+			const mockInvoices = [mockInvoice, { ...mockInvoice, _id: 'another-id', amount: '199.99' }]
 			const mockWhere = vi.fn().mockResolvedValue(mockInvoices)
 			const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
 			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
@@ -322,7 +331,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findBySubscriptionId(mockInvoice.subscriptionId)
 
@@ -342,7 +351,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findBySubscriptionId('non-existent-subscription')
 
@@ -359,7 +368,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.findBySubscriptionId(mockInvoice.subscriptionId)).rejects.toThrow(
 				'Query failed',
@@ -382,7 +391,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findOverdue()
 
@@ -401,7 +410,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findOverdue()
 
@@ -417,7 +426,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findOverdue()
 
@@ -435,7 +444,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.findOverdue()).rejects.toThrow('Query failed')
 		})
@@ -454,7 +463,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findLatestByCustomerId('customer-id')
 
@@ -467,7 +476,7 @@ describe('InvoiceDrizzleRepository', () => {
 			expect(result).toEqual(mockInvoice)
 		})
 
-		it('should return undefined when no invoices found for customerId', async () => {
+		it('should return null when no invoices found for customerId', async () => {
 			const mockLimit = vi.fn().mockResolvedValue([])
 			const mockOrderBy = vi.fn().mockReturnValue({ limit: mockLimit })
 			const mockWhere = vi.fn().mockReturnValue({ orderBy: mockOrderBy })
@@ -479,11 +488,11 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			const result = await repository.findLatestByCustomerId('non-existent-customer')
 
-			expect(result).toBeUndefined()
+			expect(result).toBeNull()
 		})
 
 		it('should propagate error when query fails', async () => {
@@ -499,7 +508,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await expect(repository.findLatestByCustomerId('customer-id')).rejects.toThrow('Query failed')
 		})
@@ -516,7 +525,7 @@ describe('InvoiceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new InvoiceDrizzleRepository(mockDb)
+			repository = new InvoiceDrizzleRepository(mockDb, TEST_ORG_ID)
 
 			await repository.findLatestByCustomerId('customer-id')
 
