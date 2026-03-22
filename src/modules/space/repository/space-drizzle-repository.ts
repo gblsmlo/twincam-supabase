@@ -1,6 +1,6 @@
 import { type Database, db, spacesTable } from '@/infra/db'
 import { eq, inArray, like } from 'drizzle-orm'
-import type { Space, SpaceInsert, SpaceInsertFull, SpaceUpdate } from '../types'
+import type { Space, SpaceInsert, SpaceInsertFull, SpaceUpdate, SpaceUpdateFull } from '../types'
 import type { SpaceRepository } from './space-repository'
 
 export class SpaceDrizzleRepository implements SpaceRepository {
@@ -12,7 +12,7 @@ export class SpaceDrizzleRepository implements SpaceRepository {
 		return result
 	}
 
-	async update(id: string, input: SpaceUpdate): Promise<Space> {
+	async update(id: string, input: SpaceUpdate | SpaceUpdateFull): Promise<Space> {
 		const update = {
 			...input,
 			updatedAt: new Date(),
@@ -32,6 +32,16 @@ export class SpaceDrizzleRepository implements SpaceRepository {
 		return {
 			deletedId: result?.deletedId,
 		}
+	}
+
+	async findById(id: string): Promise<Space | null> {
+		const [result] = await this.db
+			.select()
+			.from(spacesTable)
+			.where(eq(spacesTable._id, id))
+			.limit(1)
+
+		return result
 	}
 
 	async findByOwnerId(id: string): Promise<Space | null> {
