@@ -14,15 +14,10 @@ vi.mock('@/infra/db', () => ({
 		subscriptionId: 'mock-subscriptionId',
 		updatedAt: 'mock-updatedAt',
 	},
-	subscriptionsTable: {
-		_id: 'mock-subscription-_id',
-		customerId: 'mock-customerId',
-		organizationId: 'mock-subscription-organizationId',
-	},
 }))
 
 import type { Database } from '@/infra/db'
-import { invoicesTable, subscriptionsTable } from '@/infra/db'
+import { invoicesTable } from '@/infra/db'
 import type { Invoice, InvoiceInsert, InvoiceUpdate } from '../types'
 import { InvoiceDrizzleRepository } from './invoice-drizzle-repository'
 
@@ -447,89 +442,6 @@ describe('InvoiceDrizzleRepository', () => {
 			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
 
 			await expect(repository.findOverdue()).rejects.toThrow('Query failed')
-		})
-	})
-
-	describe('findLatestByCustomerId', () => {
-		it('should find latest invoice by customerId successfully', async () => {
-			const mockLimit = vi.fn().mockResolvedValue([mockInvoice])
-			const mockOrderBy = vi.fn().mockReturnValue({ limit: mockLimit })
-			const mockWhere = vi.fn().mockReturnValue({ orderBy: mockOrderBy })
-			const mockInnerJoin = vi.fn().mockReturnValue({ where: mockWhere })
-			const mockFrom = vi.fn().mockReturnValue({ innerJoin: mockInnerJoin })
-			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
-
-			mockDb = {
-				select: mockSelect,
-			} as unknown as Database
-
-			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
-
-			const result = await repository.findLatestByCustomerId('customer-id')
-
-			expect(mockSelect).toHaveBeenCalled()
-			expect(mockFrom).toHaveBeenCalledWith(invoicesTable)
-			expect(mockInnerJoin).toHaveBeenCalled()
-			expect(mockWhere).toHaveBeenCalled()
-			expect(mockOrderBy).toHaveBeenCalled()
-			expect(mockLimit).toHaveBeenCalledWith(1)
-			expect(result).toEqual(mockInvoice)
-		})
-
-		it('should return null when no invoices found for customerId', async () => {
-			const mockLimit = vi.fn().mockResolvedValue([])
-			const mockOrderBy = vi.fn().mockReturnValue({ limit: mockLimit })
-			const mockWhere = vi.fn().mockReturnValue({ orderBy: mockOrderBy })
-			const mockInnerJoin = vi.fn().mockReturnValue({ where: mockWhere })
-			const mockFrom = vi.fn().mockReturnValue({ innerJoin: mockInnerJoin })
-			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
-
-			mockDb = {
-				select: mockSelect,
-			} as unknown as Database
-
-			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
-
-			const result = await repository.findLatestByCustomerId('non-existent-customer')
-
-			expect(result).toBeNull()
-		})
-
-		it('should propagate error when query fails', async () => {
-			const dbError = new Error('Query failed')
-			const mockLimit = vi.fn().mockRejectedValue(dbError)
-			const mockOrderBy = vi.fn().mockReturnValue({ limit: mockLimit })
-			const mockWhere = vi.fn().mockReturnValue({ orderBy: mockOrderBy })
-			const mockInnerJoin = vi.fn().mockReturnValue({ where: mockWhere })
-			const mockFrom = vi.fn().mockReturnValue({ innerJoin: mockInnerJoin })
-			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
-
-			mockDb = {
-				select: mockSelect,
-			} as unknown as Database
-
-			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
-
-			await expect(repository.findLatestByCustomerId('customer-id')).rejects.toThrow('Query failed')
-		})
-
-		it('should use inner join with subscriptions table', async () => {
-			const mockLimit = vi.fn().mockResolvedValue([mockInvoice])
-			const mockOrderBy = vi.fn().mockReturnValue({ limit: mockLimit })
-			const mockWhere = vi.fn().mockReturnValue({ orderBy: mockOrderBy })
-			const mockInnerJoin = vi.fn().mockReturnValue({ where: mockWhere })
-			const mockFrom = vi.fn().mockReturnValue({ innerJoin: mockInnerJoin })
-			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
-
-			mockDb = {
-				select: mockSelect,
-			} as unknown as Database
-
-			repository = new InvoiceDrizzleRepository(TEST_ORG_ID, mockDb)
-
-			await repository.findLatestByCustomerId('customer-id')
-
-			expect(mockInnerJoin).toHaveBeenCalledWith(subscriptionsTable, expect.anything())
 		})
 	})
 })
