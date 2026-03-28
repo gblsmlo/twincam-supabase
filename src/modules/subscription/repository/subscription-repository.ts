@@ -1,3 +1,4 @@
+import type { SubscriptionSpecification } from '../specifications/subscription-specification'
 import type { Subscription, SubscriptionInsert, SubscriptionUpdate } from '../types'
 
 /**
@@ -14,4 +15,5 @@ export interface SubscriptionRepository {
 	findActiveByCustomerId(customerId: string): Promise<Subscription | null>
 	findByStatus(status: 'active' | 'canceled' | 'past_due'): Promise<Subscription[]>
 	findByOrganizationId(organizationId: string): Promise<Subscription[]>
+	findBySpecification(spec: SubscriptionSpecification): Promise<Subscription[]>
 }

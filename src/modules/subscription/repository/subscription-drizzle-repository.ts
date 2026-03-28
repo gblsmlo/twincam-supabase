@@ -1,6 +1,7 @@
 import { db, subscriptionsTable } from '@/infra/db'
 import { BaseRepository } from '@/infra/repositories'
 import { and, eq } from 'drizzle-orm'
+import type { SubscriptionSpecification } from '../specifications/subscription-specification'
 import type { Subscription, SubscriptionInsert, SubscriptionUpdate } from '../types'
 import type { SubscriptionRepository } from './subscription-repository'
 
@@ -99,6 +100,13 @@ export class SubscriptionDrizzleRepository
 			.select()
 			.from(subscriptionsTable)
 			.where(eq(subscriptionsTable.organizationId, organizationId))
+	}
+
+	async findBySpecification(spec: SubscriptionSpecification): Promise<Subscription[]> {
+		return await this.db
+			.select()
+			.from(subscriptionsTable)
+			.where(this.withOrgFilter(subscriptionsTable.organizationId, spec.toWhereClause()))
 	}
 }
 

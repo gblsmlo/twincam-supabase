@@ -1,3 +1,4 @@
+import type { InvoiceSpecification } from '../specifications/invoice-specification'
 import type { Invoice, InvoiceInsert, InvoiceUpdate } from '../types'
 
 /**
@@ -13,4 +14,5 @@ export interface InvoiceRepository {
 	findBySubscriptionId(subscriptionId: string): Promise<Invoice[]>
 	findByOrganizationId(organizationId: string): Promise<Invoice[]>
 	findOverdue(): Promise<Invoice[]>
+	findBySpecification(spec: InvoiceSpecification): Promise<Invoice[]>
 }
