@@ -1,6 +1,7 @@
 import { db, invoicesTable } from '@/infra/db'
 import { BaseRepository } from '@/infra/repositories'
-import { and, eq, lt, ne } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
+import { InvoiceSpecification } from '../specifications/invoice-specification'
 import type { Invoice, InvoiceInsert, InvoiceUpdate } from '../types'
 import type { InvoiceRepository } from './invoice-repository'
 
@@ -66,17 +67,14 @@ export class InvoiceDrizzleRepository extends BaseRepository implements InvoiceR
 	}
 
 	async findOverdue(): Promise<Invoice[]> {
-		const now = new Date()
+		return this.findBySpecification(InvoiceSpecification.isOverdue())
+	}
 
+	async findBySpecification(spec: InvoiceSpecification): Promise<Invoice[]> {
 		return await this.db
 			.select()
 			.from(invoicesTable)
-			.where(
-				this.withOrgFilter(
-					invoicesTable.organizationId,
-					and(ne(invoicesTable.status, 'paid'), lt(invoicesTable.dueDate, now)),
-				),
-			)
+			.where(this.withOrgFilter(invoicesTable.organizationId, spec.toWhereClause()))
 	}
 }
 

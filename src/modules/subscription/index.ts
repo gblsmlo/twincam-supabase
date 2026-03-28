@@ -5,4 +5,5 @@ export {
 export * from './repository/subscription-repository'
 export * from './schemas'
 export * from './services/subscription-domain-service'
+export * from './specifications/subscription-specification'
 export * from './types'
