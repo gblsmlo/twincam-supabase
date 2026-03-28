@@ -1,6 +1,6 @@
 import { decimal, index, pgEnum, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 import { auditFields } from '../helpers'
-import { spacesTable } from './space'
+import { organizationsTable } from './organization'
 import { subscriptionsTable } from './subscription'
 
 export const invoiceStatusEnum = pgEnum('invoice_status', ['draft', 'open', 'paid', 'void'])
@@ -14,7 +14,7 @@ export const invoicesTable = pgTable(
 		dueDate: timestamp('due_date', { withTimezone: true }).notNull(),
 		organizationId: uuid('organization_id')
 			.notNull()
-			.references(() => spacesTable._id, { onDelete: 'cascade' }),
+			.references(() => organizationsTable._id, { onDelete: 'cascade' }),
 		paidAt: timestamp('paid_at', { withTimezone: true }),
 		status: invoiceStatusEnum().notNull().default('draft'),
 		subscriptionId: uuid('subscription_id')

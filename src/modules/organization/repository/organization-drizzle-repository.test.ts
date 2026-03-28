@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/infra/db', () => ({
 	db: {},
-	spacesTable: {
+	organizationsTable: {
 		_id: 'mock-id',
 		description: 'mock-description',
 		hierarchyLevel: 'mock-hierarchyLevel',
@@ -15,11 +15,11 @@ vi.mock('@/infra/db', () => ({
 }))
 
 import type { Database } from '@/infra/db'
-import { spacesTable } from '@/infra/db'
-import type { Space, SpaceInsert, SpaceUpdate } from '../types'
-import { SpaceDrizzleRepository } from './space-drizzle-repository'
+import { organizationsTable } from '@/infra/db'
+import type { Organization, OrganizationInsert, OrganizationUpdate } from '../types'
+import { OrganizationDrizzleRepository } from './organization-drizzle-repository'
 
-const mockSpace: Space = {
+const mockSpace: Organization = {
 	_id: '550e8400-e29b-41d4-a716-446655440000',
 	createdAt: new Date(),
 	description: 'Test space description',
@@ -32,7 +32,7 @@ const mockSpace: Space = {
 	updatedAt: new Date(),
 }
 
-const mockSpaceInsert: SpaceInsert = {
+const mockOrganizationInsert: OrganizationInsert = {
 	_id: mockSpace._id,
 	description: mockSpace.description,
 	name: mockSpace.name,
@@ -40,13 +40,13 @@ const mockSpaceInsert: SpaceInsert = {
 	slug: mockSpace.slug,
 }
 
-const mockSpaceUpdate: SpaceUpdate = {
+const mockOrganizationUpdate: OrganizationUpdate = {
 	description: 'Updated description',
-	name: 'Updated Space Name',
+	name: 'Updated Organization Name',
 }
 
-describe('SpaceDrizzleRepository', () => {
-	let repository: SpaceDrizzleRepository
+describe('OrganizationDrizzleRepository', () => {
+	let repository: OrganizationDrizzleRepository
 	let mockDb: Database
 
 	beforeEach(() => {
@@ -66,12 +66,12 @@ describe('SpaceDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
-			const result = await repository.create(mockSpaceInsert)
+			const result = await repository.create(mockOrganizationInsert)
 
-			expect(mockInsert).toHaveBeenCalledWith(spacesTable)
-			expect(mockValues).toHaveBeenCalledWith(mockSpaceInsert)
+			expect(mockInsert).toHaveBeenCalledWith(organizationsTable)
+			expect(mockValues).toHaveBeenCalledWith(mockOrganizationInsert)
 			expect(result).toEqual(mockSpace)
 		})
 
@@ -84,13 +84,15 @@ describe('SpaceDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
-			await expect(repository.create(mockSpaceInsert)).rejects.toThrow('Database connection failed')
+			await expect(repository.create(mockOrganizationInsert)).rejects.toThrow(
+				'Database connection failed',
+			)
 		})
 
 		it('should create space with only required fields', async () => {
-			const minimalInsert: SpaceInsert = {
+			const minimalInsert: OrganizationInsert = {
 				_id: mockSpace._id,
 				name: mockSpace.name,
 				ownerId: mockSpace.ownerId,
@@ -105,7 +107,7 @@ describe('SpaceDrizzleRepository', () => {
 				insert: mockInsert,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.create(minimalInsert)
 
@@ -116,7 +118,7 @@ describe('SpaceDrizzleRepository', () => {
 
 	describe('update', () => {
 		it('should update existing space successfully', async () => {
-			const updatedSpace = { ...mockSpace, ...mockSpaceUpdate }
+			const updatedSpace = { ...mockSpace, ...mockOrganizationUpdate }
 			const mockWhere = vi.fn().mockResolvedValue([updatedSpace])
 			const mockSet = vi.fn().mockReturnValue({ where: mockWhere })
 			const mockUpdate = vi.fn().mockReturnValue({ set: mockSet })
@@ -125,18 +127,18 @@ describe('SpaceDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
-			const result = await repository.update(mockSpace._id, mockSpaceUpdate)
+			const result = await repository.update(mockSpace._id, mockOrganizationUpdate)
 
-			expect(mockUpdate).toHaveBeenCalledWith(spacesTable)
+			expect(mockUpdate).toHaveBeenCalledWith(organizationsTable)
 			expect(mockSet).toHaveBeenCalled()
 
 			const setCallArg = mockSet.mock.calls[0][0]
 			expect(setCallArg).toHaveProperty('updatedAt')
 			expect(setCallArg.updatedAt).toBeInstanceOf(Date)
-			expect(setCallArg.name).toBe(mockSpaceUpdate.name)
-			expect(setCallArg.description).toBe(mockSpaceUpdate.description)
+			expect(setCallArg.name).toBe(mockOrganizationUpdate.name)
+			expect(setCallArg.description).toBe(mockOrganizationUpdate.description)
 
 			expect(mockWhere).toHaveBeenCalled()
 			expect(result).toEqual(updatedSpace)
@@ -144,7 +146,7 @@ describe('SpaceDrizzleRepository', () => {
 
 		it('should update existing space successfully', async () => {
 			const dateBefore = new Date()
-			const updatedSpace = { ...mockSpace, ...mockSpaceUpdate }
+			const updatedSpace = { ...mockSpace, ...mockOrganizationUpdate }
 			const mockWhere = vi.fn().mockResolvedValue([updatedSpace])
 			const mockSet = vi.fn().mockReturnValue({ where: mockWhere })
 			const mockUpdate = vi.fn().mockReturnValue({ set: mockSet })
@@ -153,9 +155,9 @@ describe('SpaceDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
-			await repository.update(mockSpace._id, mockSpaceUpdate)
+			await repository.update(mockSpace._id, mockOrganizationUpdate)
 			const dateAfter = new Date()
 
 			const setCallArg = mockSet.mock.calls[0][0]
@@ -174,9 +176,9 @@ describe('SpaceDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
-			await expect(repository.update(mockSpace._id, mockSpaceUpdate)).rejects.toThrow(
+			await expect(repository.update(mockSpace._id, mockOrganizationUpdate)).rejects.toThrow(
 				'Update failed',
 			)
 		})
@@ -190,9 +192,9 @@ describe('SpaceDrizzleRepository', () => {
 				update: mockUpdate,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
-			const result = await repository.update('non-existent-id', mockSpaceUpdate)
+			const result = await repository.update('non-existent-id', mockOrganizationUpdate)
 
 			expect(result).toBeUndefined()
 		})
@@ -208,11 +210,11 @@ describe('SpaceDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.delete(mockSpace._id)
 
-			expect(mockDelete).toHaveBeenCalledWith(spacesTable)
+			expect(mockDelete).toHaveBeenCalledWith(organizationsTable)
 			expect(mockWhere).toHaveBeenCalled()
 			expect(mockReturning).toHaveBeenCalled()
 			expect(result).toEqual({ deletedId: mockSpace._id })
@@ -228,7 +230,7 @@ describe('SpaceDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			await expect(repository.delete(mockSpace._id)).rejects.toThrow('Delete failed')
 		})
@@ -242,7 +244,7 @@ describe('SpaceDrizzleRepository', () => {
 				delete: mockDelete,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.delete('non-existent-id')
 
@@ -262,14 +264,14 @@ describe('SpaceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			// Act
 			const result = await repository.findByOwnerId(mockSpace.ownerId)
 
 			// Assert
 			expect(mockSelect).toHaveBeenCalled()
-			expect(mockFrom).toHaveBeenCalledWith(spacesTable)
+			expect(mockFrom).toHaveBeenCalledWith(organizationsTable)
 			expect(mockWhere).toHaveBeenCalled()
 			expect(mockLimit).toHaveBeenCalledWith(1)
 			expect(result).toEqual(mockSpace)
@@ -286,7 +288,7 @@ describe('SpaceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			// Act
 			const result = await repository.findByOwnerId('non-existent-owner')
@@ -307,7 +309,7 @@ describe('SpaceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			// Act & Assert
 			await expect(repository.findByOwnerId(mockSpace.ownerId)).rejects.toThrow('Query failed')
@@ -325,12 +327,12 @@ describe('SpaceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.findBySlug(mockSpace.slug)
 
 			expect(mockSelect).toHaveBeenCalled()
-			expect(mockFrom).toHaveBeenCalledWith(spacesTable)
+			expect(mockFrom).toHaveBeenCalledWith(organizationsTable)
 			expect(mockWhere).toHaveBeenCalled()
 			expect(mockLimit).toHaveBeenCalledWith(1)
 			expect(result).toEqual(mockSpace)
@@ -346,7 +348,7 @@ describe('SpaceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			// Act
 			const result = await repository.findBySlug('non-existent-slug')
@@ -366,7 +368,7 @@ describe('SpaceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			await expect(repository.findBySlug(mockSpace.slug)).rejects.toThrow('Query failed')
 		})
@@ -381,7 +383,7 @@ describe('SpaceDrizzleRepository', () => {
 				select: mockSelect,
 			} as unknown as Database
 
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.findBySlug('TEST-SPACE')
 
@@ -391,7 +393,7 @@ describe('SpaceDrizzleRepository', () => {
 
 	describe('findByParentId', () => {
 		it('should find direct children of a parent organization', async () => {
-			const childSpace: Space = {
+			const childSpace: Organization = {
 				...mockSpace,
 				_id: '550e8400-e29b-41d4-a716-446655440002',
 				hierarchyLevel: 2,
@@ -404,12 +406,12 @@ describe('SpaceDrizzleRepository', () => {
 			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
 
 			mockDb = { select: mockSelect } as unknown as Database
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.findByParentId(mockSpace._id)
 
 			expect(mockSelect).toHaveBeenCalled()
-			expect(mockFrom).toHaveBeenCalledWith(spacesTable)
+			expect(mockFrom).toHaveBeenCalledWith(organizationsTable)
 			expect(mockWhere).toHaveBeenCalled()
 			expect(result).toEqual([childSpace])
 		})
@@ -420,7 +422,7 @@ describe('SpaceDrizzleRepository', () => {
 			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
 
 			mockDb = { select: mockSelect } as unknown as Database
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.findByParentId('no-children-id')
 
@@ -434,7 +436,7 @@ describe('SpaceDrizzleRepository', () => {
 			const childId = '550e8400-e29b-41d4-a716-446655440011'
 			const grandchildId = '550e8400-e29b-41d4-a716-446655440012'
 
-			const grandchild: Space = {
+			const grandchild: Organization = {
 				...mockSpace,
 				_id: grandchildId,
 				hierarchyLevel: 3,
@@ -442,8 +444,8 @@ describe('SpaceDrizzleRepository', () => {
 				parentOrganizationId: childId,
 			}
 
-			const rootSpace: Space = { ...mockSpace, _id: rootId }
-			const childSpace: Space = { ...mockSpace, _id: childId }
+			const rootSpace: Organization = { ...mockSpace, _id: rootId }
+			const childSpace: Organization = { ...mockSpace, _id: childId }
 
 			const mockLimit = vi.fn().mockResolvedValue([grandchild])
 			const mockWhereFirst = vi.fn().mockReturnValue({ limit: mockLimit })
@@ -460,7 +462,7 @@ describe('SpaceDrizzleRepository', () => {
 			})
 
 			mockDb = { select: mockSelect } as unknown as Database
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.findAncestors(grandchildId)
 
@@ -468,7 +470,7 @@ describe('SpaceDrizzleRepository', () => {
 		})
 
 		it('should return empty array for root organization', async () => {
-			const rootSpace: Space = {
+			const rootSpace: Organization = {
 				...mockSpace,
 				hierarchyPath: mockSpace._id,
 			}
@@ -479,7 +481,7 @@ describe('SpaceDrizzleRepository', () => {
 			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
 
 			mockDb = { select: mockSelect } as unknown as Database
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.findAncestors(mockSpace._id)
 
@@ -493,7 +495,7 @@ describe('SpaceDrizzleRepository', () => {
 			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
 
 			mockDb = { select: mockSelect } as unknown as Database
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.findAncestors('non-existent')
 
@@ -503,7 +505,7 @@ describe('SpaceDrizzleRepository', () => {
 
 	describe('findDescendants', () => {
 		it('should find all descendants using LIKE on hierarchyPath', async () => {
-			const childSpace: Space = {
+			const childSpace: Organization = {
 				...mockSpace,
 				_id: '550e8400-e29b-41d4-a716-446655440002',
 				hierarchyLevel: 2,
@@ -511,7 +513,7 @@ describe('SpaceDrizzleRepository', () => {
 				parentOrganizationId: mockSpace._id,
 			}
 
-			const rootSpace: Space = {
+			const rootSpace: Organization = {
 				...mockSpace,
 				hierarchyPath: mockSpace._id,
 			}
@@ -531,7 +533,7 @@ describe('SpaceDrizzleRepository', () => {
 			})
 
 			mockDb = { select: mockSelect } as unknown as Database
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.findDescendants(mockSpace._id)
 
@@ -539,7 +541,7 @@ describe('SpaceDrizzleRepository', () => {
 		})
 
 		it('should return empty array when no descendants exist', async () => {
-			const leafSpace: Space = {
+			const leafSpace: Organization = {
 				...mockSpace,
 				hierarchyPath: mockSpace._id,
 			}
@@ -559,7 +561,7 @@ describe('SpaceDrizzleRepository', () => {
 			})
 
 			mockDb = { select: mockSelect } as unknown as Database
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.findDescendants(mockSpace._id)
 
@@ -573,7 +575,7 @@ describe('SpaceDrizzleRepository', () => {
 			const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
 
 			mockDb = { select: mockSelect } as unknown as Database
-			repository = new SpaceDrizzleRepository(mockDb)
+			repository = new OrganizationDrizzleRepository(mockDb)
 
 			const result = await repository.findDescendants('non-existent')
 

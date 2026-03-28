@@ -3,8 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { customerRepository } from '@/modules/customer/repository/customer-drizzle-repository'
 import { memberRepository } from '@/modules/member'
-import { spaceRepository } from '@/modules/space/repository/space-drizzle-repository'
-import { OnboardingService } from '@/modules/space/services/onboarding-service'
+import { organizationRepository } from '@/modules/organization/repository/organization-drizzle-repository'
+import { OnboardingService } from '@/modules/organization/services/onboarding-service'
 import { subscriptionRepository } from '@/modules/subscription'
 import { failure, isFailure, type Result, success } from '@/shared/errors/result'
 import { type SignUpFormData, signUpSchema } from '../schemas'
@@ -53,7 +53,7 @@ export const signUpAction = async (formData: SignUpFormData): Promise<Result<Sig
 		const onboardingService = new OnboardingService({
 			customerRepository: customerRepository(data.user.id),
 			memberRepository: memberRepository(data.user.id),
-			spaceRepository: spaceRepository(),
+			organizationRepository: organizationRepository(),
 			subscriptionRepository: subscriptionRepository(data.user.id),
 		})
 

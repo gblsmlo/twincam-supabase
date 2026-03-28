@@ -3,22 +3,22 @@
 import { createClient } from '@/lib/supabase/server'
 import { failure, isFailure, type Result, success } from '@/shared/errors/result'
 import { OrganizationFactory } from '../factories/organization-factory'
-import { spaceRepository } from '../repository/space-drizzle-repository'
-import type { Space } from '../types'
+import { organizationRepository } from '../repository/organization-drizzle-repository'
+import type { Organization } from '../types'
 
-type CreateSpaceInput = {
+type CreateOrganizationInput = {
 	name: string
 	slug: string
 	parentId?: string
 }
 
-type CreateSpaceOutput = {
-	space: Space
+type CreateOrganizationOutput = {
+	organization: Organization
 }
 
-export const createSpaceAction = async (
-	input: CreateSpaceInput,
-): Promise<Result<CreateSpaceOutput>> => {
+export const createOrganizationAction = async (
+	input: CreateOrganizationInput,
+): Promise<Result<CreateOrganizationOutput>> => {
 	try {
 		const supabase = await createClient()
 		const {
@@ -32,7 +32,7 @@ export const createSpaceAction = async (
 			})
 		}
 
-		const repo = spaceRepository()
+		const repo = organizationRepository()
 
 		const createResult = await OrganizationFactory.createOrganizationWithValidation(
 			{ ...input, ownerId: user.id },
@@ -43,9 +43,9 @@ export const createSpaceAction = async (
 			return createResult
 		}
 
-		const space = await repo.create(createResult.data)
+		const organization = await repo.create(createResult.data)
 
-		return success({ space })
+		return success({ organization })
 	} catch (error) {
 		if (error instanceof Error) {
 			return failure({

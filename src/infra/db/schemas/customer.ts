@@ -1,6 +1,6 @@
 import { index, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core'
 import { auditFields } from '../helpers'
-import { spacesTable } from './space'
+import { organizationsTable } from './organization'
 
 export const customerStatusEnum = pgEnum('customer_status', ['active', 'inactive'])
 
@@ -12,10 +12,10 @@ export const customersTable = pgTable(
 		name: text('').notNull(),
 		organizationId: uuid('organization_id')
 			.notNull()
-			.references(() => spacesTable._id, { onDelete: 'cascade' }),
+			.references(() => organizationsTable._id, { onDelete: 'cascade' }),
 		spaceId: uuid()
 			.notNull()
-			.references(() => spacesTable._id, { onDelete: 'cascade' }),
+			.references(() => organizationsTable._id, { onDelete: 'cascade' }),
 		status: customerStatusEnum().notNull().default('active'),
 		...auditFields,
 	},

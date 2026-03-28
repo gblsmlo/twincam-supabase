@@ -1,6 +1,6 @@
 import { failure, type Result, success } from '@/shared/errors/result'
-import type { SpaceRepository } from '../repository/space-repository'
-import type { Space } from '../types'
+import type { OrganizationRepository } from '../repository/organization-repository'
+import type { Organization } from '../types'
 
 export interface OrganizationNode {
 	children: OrganizationNode[]
@@ -10,7 +10,7 @@ export interface OrganizationNode {
 }
 
 export class HierarchyService {
-	constructor(private readonly spaceRepository: SpaceRepository) {}
+	constructor(private readonly organizationRepository: OrganizationRepository) {}
 
 	/**
 	 * Valida uma operação de movimentação na árvore organizacional.
@@ -28,7 +28,7 @@ export class HierarchyService {
 			return success(undefined)
 		}
 
-		const newParent = await this.spaceRepository.findById(newParentId)
+		const newParent = await this.organizationRepository.findById(newParentId)
 		if (!newParent) {
 			return failure({
 				message: 'Organização pai não encontrada.',
@@ -36,7 +36,7 @@ export class HierarchyService {
 			})
 		}
 
-		const ancestors = await this.spaceRepository.findAncestors(newParentId)
+		const ancestors = await this.organizationRepository.findAncestors(newParentId)
 		const wouldCreateCycle = ancestors.some((ancestor) => ancestor._id === orgId)
 
 		if (wouldCreateCycle) {
@@ -52,7 +52,7 @@ export class HierarchyService {
 	/**
 	 * Move uma organização para um novo parent e atualiza hierarchy_path em cascata.
 	 */
-	async moveOrganization(orgId: string, newParentId: string | null): Promise<Result<Space>> {
+	async moveOrganization(orgId: string, newParentId: string | null): Promise<Result<Organization>> {
 		const validation = await this.validateMove(orgId, newParentId)
 		if (!validation.success) {
 			return validation
@@ -62,14 +62,14 @@ export class HierarchyService {
 		let newPath = ''
 
 		if (newParentId) {
-			const newParent = await this.spaceRepository.findById(newParentId)
+			const newParent = await this.organizationRepository.findById(newParentId)
 			if (newParent) {
 				newPath = newParent.hierarchyPath ? `${newParent.hierarchyPath}.${orgId}` : orgId
 				newLevel = newParent.hierarchyLevel + 1
 			}
 		}
 
-		const updated = await this.spaceRepository.update(orgId, {
+		const updated = await this.organizationRepository.update(orgId, {
 			hierarchyLevel: newLevel,
 			hierarchyPath: newPath,
 			parentOrganizationId: newParentId,
@@ -84,7 +84,7 @@ export class HierarchyService {
 	 * Constrói a árvore organizacional a partir de um nó raiz.
 	 */
 	async getOrganizationTree(rootId: string): Promise<Result<OrganizationNode>> {
-		const root = await this.spaceRepository.findById(rootId)
+		const root = await this.organizationRepository.findById(rootId)
 		if (!root) {
 			return failure({
 				message: 'Organização não encontrada.',
@@ -96,8 +96,8 @@ export class HierarchyService {
 		return success(node)
 	}
 
-	private async buildTreeNode(space: Space): Promise<OrganizationNode> {
-		const children = await this.spaceRepository.findByParentId(space._id)
+	private async buildTreeNode(space: Organization): Promise<OrganizationNode> {
+		const children = await this.organizationRepository.findByParentId(space._id)
 		const childNodes = await Promise.all(children.map((child) => this.buildTreeNode(child)))
 
 		return {
@@ -113,13 +113,13 @@ export class HierarchyService {
 		parentPath: string,
 		parentLevel: number,
 	): Promise<void> {
-		const children = await this.spaceRepository.findByParentId(parentId)
+		const children = await this.organizationRepository.findByParentId(parentId)
 
 		for (const child of children) {
 			const childPath = parentPath ? `${parentPath}.${child._id}` : child._id
 			const childLevel = parentLevel + 1
 
-			await this.spaceRepository.update(child._id, {
+			await this.organizationRepository.update(child._id, {
 				hierarchyLevel: childLevel,
 				hierarchyPath: childPath,
 			})
