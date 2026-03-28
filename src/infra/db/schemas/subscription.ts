@@ -1,8 +1,8 @@
 import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 import { auditFields } from '../helpers'
 import { customersTable } from './customer'
+import { organizationsTable } from './organization'
 import { pricesTable } from './price'
-import { spacesTable } from './space'
 
 export const subscriptionsTable = pgTable(
 	'subscriptions',
@@ -14,7 +14,7 @@ export const subscriptionsTable = pgTable(
 		finishedAt: timestamp('finished_at', { withTimezone: true }),
 		organizationId: uuid('organization_id')
 			.notNull()
-			.references(() => spacesTable._id, { onDelete: 'cascade' }),
+			.references(() => organizationsTable._id, { onDelete: 'cascade' }),
 		planName: text('plan_name').notNull(),
 		priceId: uuid('price_id').references(() => pricesTable._id, { onDelete: 'set null' }),
 		startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),

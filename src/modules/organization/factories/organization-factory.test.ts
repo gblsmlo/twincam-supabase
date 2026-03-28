@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { SpaceRepository } from '../repository/space-repository'
-import type { Space } from '../types'
+import type { OrganizationRepository } from '../repository/organization-repository'
+import type { Organization } from '../types'
 import { OrganizationFactory } from './organization-factory'
 
 const TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440000'
 const TEST_ORG_ID = '550e8400-e29b-41d4-a716-446655440001'
 
-const mockRootOrg: Space = {
+const mockRootOrg: Organization = {
 	_id: TEST_ORG_ID,
 	createdAt: new Date(),
 	description: null,
@@ -19,7 +19,7 @@ const mockRootOrg: Space = {
 	updatedAt: new Date(),
 }
 
-function createMockSpaceRepository(): SpaceRepository {
+function createMockOrganizationRepository(): OrganizationRepository {
 	return {
 		create: vi.fn(),
 		delete: vi.fn(),
@@ -64,7 +64,7 @@ describe('OrganizationFactory', () => {
 		})
 
 		it('should append to existing hierarchy path', () => {
-			const parentWithPath: Space = {
+			const parentWithPath: Organization = {
 				...mockRootOrg,
 				_id: 'parent-id',
 				hierarchyLevel: 2,
@@ -167,10 +167,10 @@ describe('OrganizationFactory', () => {
 	})
 
 	describe('createOrganizationWithValidation', () => {
-		let repo: SpaceRepository
+		let repo: OrganizationRepository
 
 		beforeEach(() => {
-			repo = createMockSpaceRepository()
+			repo = createMockOrganizationRepository()
 		})
 
 		it('should create root organization when no parentId', async () => {

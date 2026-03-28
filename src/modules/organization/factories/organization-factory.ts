@@ -1,6 +1,6 @@
 import { failure, isFailure, type Result, success } from '@/shared/errors/result'
-import type { SpaceRepository } from '../repository/space-repository'
-import type { Space, SpaceInsert, SpaceInsertFull } from '../types'
+import type { OrganizationRepository } from '../repository/organization-repository'
+import type { Organization, OrganizationInsert, OrganizationInsertFull } from '../types'
 
 const SLUG_REGEX = /^[a-z0-9-]+$/
 const SLUG_MIN_LENGTH = 3
@@ -10,7 +10,11 @@ export class OrganizationFactory {
 	/**
 	 * Cria input para organização root (sem parent).
 	 */
-	static createRootOrganization(name: string, slug: string, ownerId: string): SpaceInsertFull {
+	static createRootOrganization(
+		name: string,
+		slug: string,
+		ownerId: string,
+	): OrganizationInsertFull {
 		return {
 			hierarchyLevel: 1,
 			hierarchyPath: '',
@@ -26,11 +30,11 @@ export class OrganizationFactory {
 	 * Computa hierarchyPath e hierarchyLevel a partir do parent.
 	 */
 	static createSubAccount(
-		parentOrganization: Space,
+		parentOrganization: Organization,
 		name: string,
 		slug: string,
 		ownerId: string,
-	): SpaceInsertFull {
+	): OrganizationInsertFull {
 		const hierarchyPath = parentOrganization.hierarchyPath
 			? `${parentOrganization.hierarchyPath}.${parentOrganization._id}`
 			: parentOrganization._id
@@ -96,14 +100,14 @@ export class OrganizationFactory {
 			ownerId: string
 			parentId?: string
 		},
-		spaceRepository: SpaceRepository,
-	): Promise<Result<SpaceInsert | SpaceInsertFull>> {
+		organizationRepository: OrganizationRepository,
+	): Promise<Result<OrganizationInsert | OrganizationInsertFull>> {
 		const validationResult = OrganizationFactory.validateOrganization(input)
 		if (isFailure(validationResult)) {
 			return validationResult
 		}
 
-		const existing = await spaceRepository.findBySlug(input.slug)
+		const existing = await organizationRepository.findBySlug(input.slug)
 		if (existing) {
 			return failure({
 				message: 'Esse slug de organização já está em uso.',
@@ -112,7 +116,7 @@ export class OrganizationFactory {
 		}
 
 		if (input.parentId) {
-			const parent = await spaceRepository.findByOwnerId(input.parentId)
+			const parent = await organizationRepository.findByOwnerId(input.parentId)
 			if (!parent) {
 				return failure({
 					message: 'Organização pai não encontrada.',

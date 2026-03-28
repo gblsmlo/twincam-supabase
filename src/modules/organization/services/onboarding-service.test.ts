@@ -5,8 +5,8 @@ import type { Member } from '@/modules/member/types'
 import type { SubscriptionRepository } from '@/modules/subscription/repository/subscription-repository'
 import type { Subscription } from '@/modules/subscription/types'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { SpaceRepository } from '../repository/space-repository'
-import type { Space } from '../types'
+import type { OrganizationRepository } from '../repository/organization-repository'
+import type { Organization } from '../types'
 import { OnboardingService } from './onboarding-service'
 
 const TEST_USER_ID = '550e8400-e29b-41d4-a716-446655440000'
@@ -15,7 +15,7 @@ const TEST_CUSTOMER_ID = '550e8400-e29b-41d4-a716-446655440002'
 const TEST_SUBSCRIPTION_ID = '550e8400-e29b-41d4-a716-446655440003'
 const TEST_MEMBER_ID = '550e8400-e29b-41d4-a716-446655440004'
 
-const mockOrganization: Space = {
+const mockOrganization: Organization = {
 	_id: TEST_ORG_ID,
 	createdAt: new Date(),
 	description: null,
@@ -86,7 +86,7 @@ function createMockRepos() {
 			findByUserIdAndSpaceId: vi.fn(),
 			update: vi.fn(),
 		} satisfies Record<keyof MemberRepository, unknown>,
-		spaceRepository: {
+		organizationRepository: {
 			create: vi.fn().mockResolvedValue(mockOrganization),
 			delete: vi.fn().mockResolvedValue({ deletedId: TEST_ORG_ID }),
 			findAncestors: vi.fn(),
@@ -95,7 +95,7 @@ function createMockRepos() {
 			findBySlug: vi.fn().mockResolvedValue(null),
 			findDescendants: vi.fn(),
 			update: vi.fn(),
-		} satisfies Record<keyof SpaceRepository, unknown>,
+		} satisfies Record<keyof OrganizationRepository, unknown>,
 		subscriptionRepository: {
 			create: vi.fn().mockResolvedValue(mockSubscription),
 			delete: vi.fn(),
@@ -137,7 +137,7 @@ describe('OnboardingService', () => {
 				expect(result.data.subscription).toEqual(mockSubscription)
 			}
 
-			expect(repos.spaceRepository.create).toHaveBeenCalledWith({
+			expect(repos.organizationRepository.create).toHaveBeenCalledWith({
 				hierarchyLevel: 1,
 				hierarchyPath: '',
 				name: 'Test Org',
@@ -202,7 +202,7 @@ describe('OnboardingService', () => {
 		})
 
 		it('should return validation error when slug already exists', async () => {
-			repos.spaceRepository.findBySlug.mockResolvedValue(mockOrganization)
+			repos.organizationRepository.findBySlug.mockResolvedValue(mockOrganization)
 
 			const result = await service.onboardNewUser(
 				TEST_USER_ID,
@@ -220,7 +220,7 @@ describe('OnboardingService', () => {
 		})
 
 		it('should return database error when organization creation fails', async () => {
-			repos.spaceRepository.create.mockRejectedValue(new Error('DB connection failed'))
+			repos.organizationRepository.create.mockRejectedValue(new Error('DB connection failed'))
 
 			const result = await service.onboardNewUser(
 				TEST_USER_ID,
@@ -255,7 +255,7 @@ describe('OnboardingService', () => {
 			}
 
 			// Verify rollback was called
-			expect(repos.spaceRepository.delete).toHaveBeenCalledWith(TEST_ORG_ID)
+			expect(repos.organizationRepository.delete).toHaveBeenCalledWith(TEST_ORG_ID)
 		})
 
 		it('should succeed even when billing initialization fails (non-critical)', async () => {
@@ -285,7 +285,7 @@ describe('OnboardingService', () => {
 		it('should handle rollback failure gracefully', async () => {
 			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 			repos.memberRepository.create.mockRejectedValue(new Error('Member creation failed'))
-			repos.spaceRepository.delete.mockRejectedValue(new Error('Rollback failed'))
+			repos.organizationRepository.delete.mockRejectedValue(new Error('Rollback failed'))
 
 			const result = await service.onboardNewUser(
 				TEST_USER_ID,

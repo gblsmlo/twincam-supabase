@@ -6,20 +6,20 @@ import type { SubscriptionRepository } from '@/modules/subscription/repository/s
 import type { Subscription } from '@/modules/subscription/types'
 import { failure, isFailure, type Result, success } from '@/shared/errors/result'
 import { OrganizationFactory } from '../factories/organization-factory'
-import type { SpaceRepository } from '../repository/space-repository'
-import type { Space } from '../types'
+import type { OrganizationRepository } from '../repository/organization-repository'
+import type { Organization } from '../types'
 
 const TRIAL_DAYS = 14
 
 export interface OnboardingResult {
-	organization: Space
+	organization: Organization
 	membership: Member
 	customer: Customer | null
 	subscription: Subscription | null
 }
 
 interface OnboardingRepositories {
-	spaceRepository: SpaceRepository
+	organizationRepository: OrganizationRepository
 	memberRepository: MemberRepository
 	subscriptionRepository: SubscriptionRepository
 	customerRepository: CustomerRepository
@@ -52,7 +52,7 @@ export class OnboardingService {
 		// Step 1: Validação + preparação via Factory
 		const createInput = await OrganizationFactory.createOrganizationWithValidation(
 			{ name: organizationName, ownerId: userId, slug: organizationSlug },
-			this.repos.spaceRepository,
+			this.repos.organizationRepository,
 		)
 
 		if (isFailure(createInput)) {
@@ -60,9 +60,9 @@ export class OnboardingService {
 		}
 
 		// Step 2: Cria Organization
-		let organization: Space
+		let organization: Organization
 		try {
-			organization = await this.repos.spaceRepository.create(createInput.data)
+			organization = await this.repos.organizationRepository.create(createInput.data)
 		} catch (error) {
 			return failure({
 				error: error instanceof Error ? error.message : 'Erro desconhecido',
@@ -144,7 +144,7 @@ export class OnboardingService {
 
 	private async rollbackOrganization(organizationId: string): Promise<void> {
 		try {
-			await this.repos.spaceRepository.delete(organizationId)
+			await this.repos.organizationRepository.delete(organizationId)
 		} catch (rollbackError) {
 			console.error(
 				'[OnboardingService] Falha no rollback da organização:',

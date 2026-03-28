@@ -6,10 +6,10 @@ export class PermissionChecker {
 
 	async canInviteMember(
 		actorUserId: string,
-		spaceId: string,
+		organizationId: string,
 		targetRole: string,
 	): Promise<boolean> {
-		const actor = await this.findActorMember(actorUserId, spaceId)
+		const actor = await this.findActorMember(actorUserId, organizationId)
 		if (!actor) return false
 
 		const actorRole = Role.fromType(actor.role)
@@ -21,10 +21,10 @@ export class PermissionChecker {
 
 	async canRemoveMember(
 		actorUserId: string,
-		spaceId: string,
+		organizationId: string,
 		targetMemberId: string,
 	): Promise<boolean> {
-		const actor = await this.findActorMember(actorUserId, spaceId)
+		const actor = await this.findActorMember(actorUserId, organizationId)
 		if (!actor) return false
 
 		const actorRole = Role.fromType(actor.role)
@@ -42,7 +42,7 @@ export class PermissionChecker {
 		if (targetRole.equals(Role.fromType('owner'))) {
 			if (!actorRole.equals(Role.fromType('owner'))) return false
 
-			const isLast = await this.isLastOwner(spaceId)
+			const isLast = await this.isLastOwner(organizationId)
 			if (isLast) return false
 		}
 
@@ -51,11 +51,11 @@ export class PermissionChecker {
 
 	async canUpdateRole(
 		actorUserId: string,
-		spaceId: string,
+		organizationId: string,
 		targetMemberId: string,
 		newRole: string,
 	): Promise<boolean> {
-		const actor = await this.findActorMember(actorUserId, spaceId)
+		const actor = await this.findActorMember(actorUserId, organizationId)
 		if (!actor) return false
 
 		const target = await this.memberRepository.findById(targetMemberId)
@@ -74,22 +74,22 @@ export class PermissionChecker {
 		return true
 	}
 
-	async canDeleteOrganization(actorUserId: string, spaceId: string): Promise<boolean> {
-		const actor = await this.findActorMember(actorUserId, spaceId)
+	async canDeleteOrganization(actorUserId: string, organizationId: string): Promise<boolean> {
+		const actor = await this.findActorMember(actorUserId, organizationId)
 		if (!actor) return false
 
 		const actorRole = Role.fromType(actor.role)
 		return actorRole.canDeleteOrganization()
 	}
 
-	async isLastOwner(spaceId: string): Promise<boolean> {
-		const members = await this.memberRepository.findBySpaceId(spaceId)
+	async isLastOwner(organizationId: string): Promise<boolean> {
+		const members = await this.memberRepository.findBySpaceId(organizationId)
 		const ownerRole = Role.fromType('owner')
 		const owners = members.filter((m) => Role.fromType(m.role).equals(ownerRole))
 		return owners.length <= 1
 	}
 
-	private async findActorMember(actorUserId: string, spaceId: string) {
-		return this.memberRepository.findByUserIdAndSpaceId(actorUserId, spaceId)
+	private async findActorMember(actorUserId: string, organizationId: string) {
+		return this.memberRepository.findByUserIdAndSpaceId(actorUserId, organizationId)
 	}
 }

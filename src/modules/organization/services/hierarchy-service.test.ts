@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { SpaceRepository } from '../repository/space-repository'
-import type { Space } from '../types'
+import type { OrganizationRepository } from '../repository/organization-repository'
+import type { Organization } from '../types'
 import { HierarchyService } from './hierarchy-service'
 
 const ROOT_ORG_ID = '550e8400-e29b-41d4-a716-446655440010'
@@ -9,7 +9,7 @@ const GRANDCHILD_ORG_ID = '550e8400-e29b-41d4-a716-446655440012'
 const UNRELATED_ORG_ID = '550e8400-e29b-41d4-a716-446655440013'
 const OWNER_ID = '550e8400-e29b-41d4-a716-446655440000'
 
-function createSpace(overrides: Partial<Space> & { _id: string }): Space {
+function createSpace(overrides: Partial<Organization> & { _id: string }): Organization {
 	return {
 		createdAt: new Date(),
 		description: null,
@@ -60,7 +60,7 @@ function createMockRepo() {
 		update: vi
 			.fn()
 			.mockImplementation((_id, input) => Promise.resolve(createSpace({ _id, ...input }))),
-	} satisfies Record<keyof SpaceRepository, unknown>
+	} satisfies Record<keyof OrganizationRepository, unknown>
 }
 
 describe('HierarchyService', () => {

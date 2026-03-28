@@ -2,7 +2,7 @@ import { foreignKey, index, integer, pgTable, text, uuid } from 'drizzle-orm/pg-
 import { authUsers } from 'drizzle-orm/supabase'
 import { auditFields } from '../helpers'
 
-export const spacesTable = pgTable(
+export const organizationsTable = pgTable(
 	'spaces',
 	{
 		_id: uuid('id').primaryKey().defaultRandom(),
